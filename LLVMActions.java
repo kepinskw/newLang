@@ -66,7 +66,7 @@ public class LLVMActions extends gramBaseListener {
                 stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL));
             }
         } else {
-            error(ctx.getStart().getLine(), "add type mismatch" + v1.type + " " + v2.type);
+            error(ctx.getStart().getLine(), "add type mismatch " + v1.type + " " + v2.type);
         }
 
     }
@@ -74,21 +74,18 @@ public class LLVMActions extends gramBaseListener {
     @Override
     public void exitSub(gramParser.SubContext ctx) {
         Value v1 = stack.pop();
-        Value v2 = stack.pop();
-
-        if (v1.type == v2.type) {
-            if (v1.type == VarType.INT) {
-                LLVMGenerator.sub_i32(v2.name, v1.name);
-                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT));
-            }
-            if (v1.type == VarType.REAL) {
-                LLVMGenerator.sub_double(v2.name, v1.name);
-                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL));
-            }
-        } else {
-            error(ctx.getStart().getLine(), "add type mismatch" + v1.type + " " + v2.type);
-        }
-
+         if (v1.type == VarType.INT) {
+               LLVMGenerator.sub_i32(v1.name);
+               stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT));
+         }
+         else if (v1.type == VarType.REAL) {
+               LLVMGenerator.sub_double(v1.name);
+               stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL));
+               
+         }
+         else{
+            error(ctx.getStart().getLine(), "negation type mismatch " + v1.type + " ");
+         }
     }
 
     @Override

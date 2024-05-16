@@ -70,6 +70,16 @@ class LLVMGenerator{
       reg++;
    }
 
+   static void sub_i32(String val1, String val2){
+      main_text += "%"+reg+" = sub i32 "+val1+", "+val2+"\n";
+      reg++;
+   }
+
+   static void sub_double(String val1, String val2){
+      main_text += "%"+reg+" = fsub double "+val1+", "+val2+"\n";
+      reg++;
+   }
+
    static void mult_i32(String val1, String val2){
       main_text += "%"+reg+" = mul i32 "+val1+", "+val2+"\n";
       reg++;

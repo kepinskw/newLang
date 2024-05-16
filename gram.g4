@@ -1,6 +1,6 @@
 grammar gram;
 
-prog: block ;
+prog: block EOF;
 
 block: (stat? NL)*;
 
@@ -9,20 +9,27 @@ stat: PRINT ID    #print
     | READ ID        #read
     | func           #fun ;
 
-expr: expr1           #single0
-    | expr1 ADD expr1 #add
+expr: value         #exprValue
+    |simpleExpr    #exprSimple
+    | first+        #exprEq
     ;
 
-expr1: expr2           #signle1
-    |  expr2 MUL expr2 #mul
-    |  expr2 DIV expr2 #divide;
+first: second (addOrSub)* #firstEq;
 
-expr2: value            #valueexpr
-    |  TOINT expr2      #toint
-    |  TOREAL expr2     #toreal
+second:  simpleExpr (mulOrDiv)+ #secondEq
+    | simpleExpr                #secondPass;
+
+mulOrDiv: MUL expr  #mul
+    |   DIV expr #divide;
+
+addOrSub: ADD second    #add
+    | SUB second        #sub;
+
+simpleExpr: value            #valueexpr
+    |  TOINT expr      #toint
+    |  TOREAL expr     #toreal
     |  LP expr RP       #par
-    |  SUB value         #sub
-    |  expr3            #signgle2;       
+    |  SUB value         #neg;
 
 expr3: BOOL AND BOOL
     |  BOOL OR BOOL
@@ -30,56 +37,40 @@ expr3: BOOL AND BOOL
     |  NEG BOOL;
 
 func: IF cond THEN blockif ENDIF
-    | FOR reps block ENDFOR 
+    | FOR reps block ENDFOR
     | FUN fpar block ENDFUN ;
 
 blockif: block;
 
-cond: ID '==' num; /* Sprawdzic czy zadziala z string i array */
+cond: ID '==' num;
 
 reps: ID
     | INT;
 
 fpar: ID;
 
-value: ID       #vid
-    |  INT      #int
+value: STRING   #string
     |  REAL     #real
-    |  STRING   #string
+    |  INT      #int
+    |  ID       #vid
     |  array    #arrayval
     |  BOOL     #bool ;
 
 num: INT
     | REAL ;
 
-array: LSP num (COMA num)* RSP ;
+array: LSP num (COMA num) RSP ;
 
 
 
 
 PRINT: 'print' ;
 READ: 'read' ;
-
-ID: [a-zA-Z][a-zA-Z0-9]* ;
-
-INT: [1-9][0-9]* ;
-REAL: ([1-9][0-9]*|[0]).[0-9]+ ;
-STRING: '"'[a-zA-Z0-9]*'"';
 BOOL: 'true'
     | 'false';
 
 TOINT: '(int)' ;
 TOREAL: '(real)' ;
-
-ADD: '+'  ;
-SUB: '-'  ;
-MUL: '*'  ;
-DIV: '/'  ;
-LP:  '('  ;
-RP:  ')'  ;
-LSP: '['  ;
-RSP: ']'  ;
-COMA:','  ;
 
 AND: 'and';
 OR:  'or' ;
@@ -95,6 +86,22 @@ ENDFOR: 'endfor';
 
 FUN: 'fun';
 ENDFUN: 'endfun';
+
+ADD: '+'  ;
+SUB: '-'  ;
+MUL: '*'  ;
+DIV: '/'  ;
+LP:  '('  ;
+RP:  ')'  ;
+LSP: '['  ;
+RSP: ']'  ;
+COMA:','  ;
+
+
+REAL: ([1-9]([0-9]|[0])*) + '.' + [0-9]+ ;
+INT: [1-9][0-9]* ;
+STRING: '"'[a-zA-Z0-9]'"';
+ID: [a-zA-Z][a-zA-Z0-9]* ;
 
 NL: '\r'? '\n' ;
 WS:   [ \t]+ { skip(); } ;

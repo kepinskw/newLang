@@ -33,17 +33,25 @@ public class LLVMActions extends gramBaseListener {
     public void exitAssign(gramParser.AssignContext ctx) {
         String ID = ctx.ID().getText();
         Value v = stack.pop();
-        variables.put(ID, v);
         if (v.type == VarType.INT) {
-            LLVMGenerator.declare_i32(ID);
+            if(!variables.containsKey(ID)) {
+                LLVMGenerator.declare_i32(ID);
+                variables.put(ID, v);
+            }
             LLVMGenerator.assign_i32(ID, v.name);
         }
         if (v.type == VarType.REAL) {
-            LLVMGenerator.declare_double(ID);
+            if(!variables.containsKey(ID)) {
+                LLVMGenerator.declare_double(ID);
+                variables.put(ID, v);
+            }
             LLVMGenerator.assign_double(ID, v.name);
         }
         if (v.type == VarType.STRING){
-            LLVMGenerator.declare_string(ID);
+            if(!variables.containsKey(ID)) {
+                LLVMGenerator.declare_string(ID);
+                variables.put(ID, v);
+            }
             LLVMGenerator.assign_string(ID);
         }
     }
@@ -126,12 +134,13 @@ public class LLVMActions extends gramBaseListener {
     @Override
     public void exitSub(gramParser.SubContext ctx) {
         Value v1 = stack.pop();
+        Value v2 = stack.pop();
          if (v1.type == VarType.INT) {
-               LLVMGenerator.sub_i32(v1.name);
+               LLVMGenerator.sub_i32(v1.name,v2.name);
                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT,0));
          }
          else if (v1.type == VarType.REAL) {
-               LLVMGenerator.sub_double(v1.name);
+               LLVMGenerator.sub_double(v1.name,v2.name);
                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL,0));
                
          }

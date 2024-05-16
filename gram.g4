@@ -5,7 +5,7 @@ prog: block ;
 block: (stat? NL)*;
 
 stat: PRINT ID    #print
-    | ID '=' INT    #assign
+    | ID '=' expr    #assign
     | READ ID        #read
     | func           #fun ;
 
@@ -13,7 +13,8 @@ expr: expr1           #single0
     | expr1 ADD expr1 #add;
 
 expr1: expr2           #signle1
-    |  expr2 MUL expr2 #mul;
+    |  expr2 MUL expr2 #mul
+    |  expr2 DIV expr2 #divide;
 
 expr2: value            #valueexpr
     |  TOINT expr2      #toint
@@ -72,6 +73,7 @@ TOREAL: '(real)' ;
 ADD: '+'  ;
 SUB: '-'  ;
 MUL: '*'  ;
+DIV: '/'  ;
 LP:  '('  ;
 RP:  ')'  ;
 LSP: '['  ;

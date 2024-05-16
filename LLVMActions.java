@@ -2,24 +2,27 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Stack;
 
-enum VarType {INT, REAL, UNKNOWN}
+enum VarType {INT, REAL, STRING, ARRAY,UNKNOWN}
 
 class Value {
     public String name;
     public VarType type;
+    public int length;
 
-    public Value(String name, VarType type) {
+    public Value(String name, VarType type, int length) {
         this.name = name;
         this.type = type;
+        this.length = length;
     }
 }
 
 
 public class LLVMActions extends gramBaseListener {
 
-    //  HashSet<String> variables = new HashSet<String>();
-    HashMap<String, VarType> variables = new HashMap<String, VarType>();
+    HashMap<String, Value> variables = new HashMap<String, Value>();
     Stack<Value> stack = new Stack<Value>();
+
+    static int BUFFER_SIZE = 16;
 
     @Override
     public void exitProg(gramParser.ProgContext ctx) {
@@ -30,7 +33,7 @@ public class LLVMActions extends gramBaseListener {
     public void exitAssign(gramParser.AssignContext ctx) {
         String ID = ctx.ID().getText();
         Value v = stack.pop();
-        variables.put(ID, v.type);
+        variables.put(ID, v);
         if (v.type == VarType.INT) {
             LLVMGenerator.declare_i32(ID);
             LLVMGenerator.assign_i32(ID, v.name);
@@ -39,32 +42,58 @@ public class LLVMActions extends gramBaseListener {
             LLVMGenerator.declare_double(ID);
             LLVMGenerator.assign_double(ID, v.name);
         }
+        if (v.type == VarType.STRING){
+            LLVMGenerator.declare_string(ID);
+            LLVMGenerator.assign_string(ID);
+        }
     }
 
     @Override
     public void exitInt(gramParser.IntContext ctx) {
-        stack.push(new Value(ctx.INT().getText(), VarType.INT));
+        stack.push(new Value(ctx.INT().getText(), VarType.INT, 0));
     }
 
     @Override
     public void exitReal(gramParser.RealContext ctx) {
-        stack.push(new Value(ctx.REAL().getText(), VarType.REAL));
+        stack.push(new Value(ctx.REAL().getText(), VarType.REAL, 0));
+    }
+
+    @Override
+    public void exitString(gramParser.StringContext ctx){
+        String tmp = ctx.STRING().getText();
+        String content = tmp.substring(1, tmp.length()-1);
+        LLVMGenerator.constant_string(content);
+        String n = "ptrstr"+(LLVMGenerator.str-1);
+        stack.push(new Value(n, VarType.STRING, content.length()));
     }
 
     @Override
     public void exitAdd(gramParser.AddContext ctx) {
-        Value v1 = stack.pop();
         Value v2 = stack.pop();
+        Value v1 = stack.pop();
 
         if (v1.type == v2.type) {
             if (v1.type == VarType.INT) {
                 LLVMGenerator.add_i32(v1.name, v2.name);
-                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT));
+                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT,0));
             }
             if (v1.type == VarType.REAL) {
                 LLVMGenerator.add_double(v1.name, v2.name);
-                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL));
+                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL,0));
             }
+            if (v1.type == VarType.STRING){
+                LLVMGenerator.add_string(v1.name, v1.length, v2.name, v2.length);
+                stack.push(new Value("%" + (LLVMGenerator.reg - 3), VarType.STRING, v1.length));
+            }
+        } else if (v1.type == VarType.STRING && v2.type == VarType.INT){
+            LLVMGenerator.int_to_string(v2.name,BUFFER_SIZE);
+            v2.name = "%" + (LLVMGenerator.reg - 2);
+            LLVMGenerator.add_string(v1.name, v1.length, v2.name, BUFFER_SIZE);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 3), VarType.STRING, v1.length));
+        } else if (v1.type == VarType.INT && v2.type == VarType.STRING){
+            LLVMGenerator.string_to_int(v2.name);
+            LLVMGenerator.add_i32(v1.name, "%"+(LLVMGenerator.reg - 1));
+            stack.push(new Value("%"+(LLVMGenerator.reg - 1),VarType.INT, 0));
         } else {
             error(ctx.getStart().getLine(), "add type mismatch " + v1.type + " " + v2.type);
         }
@@ -76,11 +105,11 @@ public class LLVMActions extends gramBaseListener {
         Value v1 = stack.pop();
          if (v1.type == VarType.INT) {
                LLVMGenerator.sub_i32(v1.name);
-               stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT));
+               stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT,0));
          }
          else if (v1.type == VarType.REAL) {
                LLVMGenerator.sub_double(v1.name);
-               stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL));
+               stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL,0));
                
          }
          else{
@@ -96,11 +125,11 @@ public class LLVMActions extends gramBaseListener {
         if (v1.type == v2.type) {
             if (v1.type == VarType.INT) {
                 LLVMGenerator.mult_i32(v1.name, v2.name);
-                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT));
+                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT,0));
             }
             if (v1.type == VarType.REAL) {
                 LLVMGenerator.mult_double(v1.name, v2.name);
-                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL));
+                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL,0));
             }
         } else {
             error(ctx.getStart().getLine(), "multiplication type mismatch");
@@ -116,11 +145,11 @@ public class LLVMActions extends gramBaseListener {
         if (v1.type == v2.type) {
             if (v1.type == VarType.INT) {
                 LLVMGenerator.div_i32(v2.name, v1.name);
-                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT));
+                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT,0));
             }
             if (v1.type == VarType.REAL) {
                 LLVMGenerator.div_double(v2.name, v1.name);
-                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL));
+                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL,0));
             }
         } else {
             error(ctx.getStart().getLine(), "division type mismatch");
@@ -132,26 +161,29 @@ public class LLVMActions extends gramBaseListener {
     public void exitToint(gramParser.TointContext ctx) {
         Value v = stack.pop();
         LLVMGenerator.fptosi(v.name);
-        stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT));
+        stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT,0));
     }
 
     @Override
     public void exitToreal(gramParser.TorealContext ctx) {
         Value v = stack.pop();
         LLVMGenerator.sitofp(v.name);
-        stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL));
+        stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL,0));
     }
 
     @Override
     public void exitPrint(gramParser.PrintContext ctx) {
         String ID = ctx.ID().getText();
-        VarType type = variables.get(ID);
-        if (type != null) {
-            if (type == VarType.INT) {
+        Value v = variables.get(ID);
+        if (v.type != null) {
+            if (v.type == VarType.INT) {
                 LLVMGenerator.printf_i32(ID);
             }
-            if (type == VarType.REAL) {
+            if (v.type == VarType.REAL) {
                 LLVMGenerator.printf_double(ID);
+            }
+            if (v.type == VarType.STRING){
+                LLVMGenerator.printf_string(ID);
             }
         } else {
             error(ctx.getStart().getLine(), "unknown variable type" + ID);
@@ -164,12 +196,14 @@ public class LLVMActions extends gramBaseListener {
         if (!variables.containsKey(ID)) {
             error(ctx.getStart().getLine(), ID + "undeclared");
         }
-        VarType type = variables.get(ID);
-        if (type == VarType.INT) {
-            LLVMGenerator.scanf_i32(ID); // Wywołuje funkcję scanf dla int
+        Value v = variables.get(ID);
+        if (v.type == VarType.INT) {
+            LLVMGenerator.scanf_i32(ID); 
 
-        } else if (type == VarType.REAL) {
-            LLVMGenerator.scanf_double(ID); // Wywołuje funkcję scanf_double dla double
+        } else if (v.type == VarType.REAL) {
+            LLVMGenerator.scanf_double(ID); 
+        } else if (v.type == VarType.STRING){
+            LLVMGenerator.scanf_string(ID, BUFFER_SIZE);
         }
 
     }

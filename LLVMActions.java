@@ -49,6 +49,26 @@ public class LLVMActions extends gramBaseListener {
     }
 
     @Override
+    public void exitVid(gramParser.VidContext ctx){
+        String ID = ctx.ID().getText();
+        if (variables.containsKey(ID)){
+            Value v = variables.get(ID);
+            if (v.type == VarType.INT){
+               LLVMGenerator.load_i32(ID);
+            }
+            if (v.type == VarType.REAL){
+               LLVMGenerator.load_double(ID);
+            }
+            if (v.type == VarType.STRING){
+               LLVMGenerator.load_string(ID);
+            }
+            stack.push(new Value("%"+(LLVMGenerator.reg - 1),v.type, v.length));
+        } else {
+         error(ctx.getStart().getLine(), "unknown variable "+ID);         
+        }
+    }
+
+    @Override
     public void exitInt(gramParser.IntContext ctx) {
         stack.push(new Value(ctx.INT().getText(), VarType.INT, 0));
     }
@@ -69,6 +89,9 @@ public class LLVMActions extends gramBaseListener {
 
     @Override
     public void exitAdd(gramParser.AddContext ctx) {
+        if (stack.isEmpty()){
+         error(ctx.getStart().getLine(), "stack empty");
+      }      
         Value v2 = stack.pop();
         Value v1 = stack.pop();
 

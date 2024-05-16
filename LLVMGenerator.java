@@ -96,6 +96,16 @@ class LLVMGenerator{
       reg++;
    }
 
+   static void load_string(String id){
+      main_text += "%"+reg+" = load i8*, i8** %"+id+"\n";
+      reg++;
+   }
+
+   static void string_pointer(String id, int l){
+      main_text += "%"+reg+" = getelementptr inbounds ["+(l+1)+" x i8], ["+(l+1)+" x i8]* %"+id+", i64 0, i64 0\n";
+      reg++;
+   }
+
    static void add_i32(String val1, String val2){
       main_text += "%"+reg+" = add i32 "+val1+", "+val2+"\n";
       reg++;

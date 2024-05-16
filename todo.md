@@ -13,3 +13,13 @@
 	* exitString
 	* exitArray
 	* Float32, Float64
+
+* Works:
+  a = "hello"
+  b = "abc"
+  c = a + b
+  print c -> helloabc
+
+* Doesnt work:
+  c = "hello" + "abc"
+  print c -> ptr error

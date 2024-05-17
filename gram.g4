@@ -12,7 +12,7 @@ stat: PRINT ID    #print
 expr: value         #exprValue
     |simpleExpr    #exprSimple
     | first+        #exprEq
-    ;
+    | boolexpr      #exprBool;
 
 first: second (addOrSub)* #firstEq;
 
@@ -31,10 +31,13 @@ simpleExpr: value            #valueexpr
     |  LP expr RP       #par
     |  SUB value         #neg;
 
+boolexpr: expr3 ((AND|OR|XOR) expr3)*;
+
 expr3: BOOL AND BOOL
     |  BOOL OR BOOL
     |  BOOL XOR BOOL
-    |  NEG BOOL;
+    |  NEG BOOL
+    |   BOOL;
 
 func: IF cond THEN blockif ENDIF
     | FOR reps block ENDFOR

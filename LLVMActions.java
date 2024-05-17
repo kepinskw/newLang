@@ -231,7 +231,6 @@ public class LLVMActions extends gramBaseListener {
         Value v = variables.get(ID);
         if (v.type == VarType.INT) {
             LLVMGenerator.scanf_i32(ID); 
-
         } else if (v.type == VarType.REAL) {
             LLVMGenerator.scanf_double(ID); 
         } else if (v.type == VarType.STRING){

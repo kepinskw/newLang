@@ -288,3 +288,10 @@ b = ((1.341 / 4.969) * 2.001) - (3.0 + 1.0)
 print b
 b = (2.001 * (1.341 / 4.969)) / 3.0
 print b
+
+c = "helo"
+d = 5
+e = c+d
+print b
+read b  
+print b

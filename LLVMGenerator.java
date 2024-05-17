@@ -38,11 +38,19 @@ class LLVMGenerator{
    }
 
    static void scanf_double(String id){
-      main_text += "%"+reg+" = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strs, i32 0, i32 0), double* %"+id+")\n";
+      main_text += "%"+reg+ "= alloca double\n"; 
+      main_text += "store double %"+id+", double* %"+reg+"\n";
       reg++;
+      main_text += "%"+reg+" = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strs, i32 0, i32 0), double* %"+id+")\n";
+      reg++;      
    }
 
    static void scanf_string(String id, int l){
+      allocate_string("str"+str, l);
+      main_text += "%"+reg+" = getelementptr inbounds ["+(l+1)+" x i8], ["+(l+1)+" x i8]* %str"+str+", i64 0, i64 0\n";
+      reg++;
+      assign_string(id);
+      str++;
       main_text += "%"+reg+" = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @strs2, i32 0, i32 0), i8* %"+(reg-1)+")\n";
       reg++;
    }
@@ -214,6 +222,7 @@ class LLVMGenerator{
       text += "@strs2 = constant [5 x i8] c\"%10s\\00\"\n";
       text += "@strspi = constant [3 x i8] c\"%d\\00\"\n";
       text += "@strps = constant [4 x i8] c\"%s\\0A\\00\"\n";
+      text += "@.str = private unnamed_addr constant [3 x i8] c\"%f\00\"\n";
       text += header_text;
       text += "define i32 @main() nounwind{\n";
       text += main_text;

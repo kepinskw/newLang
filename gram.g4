@@ -6,6 +6,7 @@ block: (stat? NL)*;
 
 stat: PRINT ID    #print
     | ID '=' expr    #assign
+    | (ID LSP INT RSP | ID) '=' array #assignArray
     | READ ID        #read
     | func           #fun
     | cond           #codn;
@@ -14,8 +15,7 @@ expr: value         #exprValue
     | letter        #epxrLetter
     |simpleExpr    #exprSimple
     | first+        #exprEq
-    | boolexpr2      #exprBool
-    | array         #exprArray;
+    | boolexpr2      #exprBool;
 
 
 first: second (addOrSub)* #firstEq;
@@ -67,8 +67,7 @@ fpar: ID;
 value: STRING   #string
     |  REAL     #real
     |  INT      #int
-    |  ID       #vid
-    |  array    #arrayval;
+    |  ID       #vid;
 
 
 array: LSP INT (COMA INT)* RSP      #intArray

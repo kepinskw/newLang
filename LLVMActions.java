@@ -2,7 +2,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Stack;
 
-enum VarType {INT, REAL, STRING, ARRAY,UNKNOWN}
+enum VarType {INT, REAL, STRING, ARRAY,BOOL,UNKNOWN}
 
 class Value {
     public String name;
@@ -53,6 +53,13 @@ public class LLVMActions extends gramBaseListener {
                 variables.put(ID, v);
             }
             LLVMGenerator.assign_string(ID);
+        }
+        if (v.type == VarType.BOOL){
+            if(!variables.containsKey(ID)) {
+                LLVMGenerator.declare_bool(ID);
+                variables.put(ID, v);
+            }
+            LLVMGenerator.assign_bool(ID, v.name);
         }
     }
 
@@ -204,6 +211,20 @@ public class LLVMActions extends gramBaseListener {
     }
 
     @Override
+    public void exitBool(gramParser.BoolContext ctx){
+        stack.push(new Value(ctx.BOOL().getText(), VarType.BOOL, 0));
+    }   
+
+    @Override
+    public void exitAnd(gramParser.AndContext ctx){
+        Value v2 = stack.pop();
+        Value v1 = stack.pop();
+        
+        LLVMGenerator.log_and(v1.name, v2.name);
+        stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.BOOL,0));
+    }
+
+    @Override
     public void exitPrint(gramParser.PrintContext ctx) {
         String ID = ctx.ID().getText();
         Value v = variables.get(ID);
@@ -216,6 +237,9 @@ public class LLVMActions extends gramBaseListener {
             }
             if (v.type == VarType.STRING){
                 LLVMGenerator.printf_string(ID);
+            }
+            if (v.type == VarType.BOOL){
+                LLVMGenerator.printf_bool(ID);
             }
         } else {
             error(ctx.getStart().getLine(), "unknown variable type" + ID);
@@ -235,6 +259,8 @@ public class LLVMActions extends gramBaseListener {
             LLVMGenerator.scanf_double(ID); 
         } else if (v.type == VarType.STRING){
             LLVMGenerator.scanf_string(ID, BUFFER_SIZE);
+        } else if (v.type == VarType.BOOL){
+            LLVMGenerator.scanf_bool(ID);
         }
 
     }

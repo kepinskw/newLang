@@ -14,6 +14,13 @@ class LLVMGenerator{
       reg++;
    }
 
+   static void printf_bool(String id){
+      main_text += "%" + reg + "= load i1, i1* %"+id+"\n";
+      reg++;
+      main_text += "%"+reg+"= call i32 (i8*, ...) @printf(i8* getelementptr ([3 x i8], [3 x i8]* @.bool_str, i32 0, i32 0), i1 %"+(reg-1)+")\n";
+      reg++;
+   }
+
    static void printf_double(String id){
       main_text += "%"+reg+" = load double, double* %"+id+"\n";
       reg++;
@@ -31,6 +38,11 @@ class LLVMGenerator{
    static void scanf_i32(String id){
       main_text += "%"+reg+" = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strs, i32 0, i32 0), i32* %"+id+")\n";
       reg++;      
+   }
+
+   static void scanf_bool(String id){
+      main_text += "%"+reg+" = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strs, i32 0, i32 0), i1* %"+id+")\n";
+      reg++;  
    }
 
    static void allocate_string(String id, int l){
@@ -67,8 +79,16 @@ class LLVMGenerator{
       main_text += "%"+id+" = alloca i8*\n";
    }
 
+   static void declare_bool(String id){
+      main_text += "%"+id+" = alloca i1\n";
+   }
+
    static void assign_i32(String id, String value){
       main_text += "store i32 "+value+", i32* %"+id+"\n";
+   }
+
+   static void assign_bool(String id, String value){
+         main_text += "store i1 "+value+", i1* %"+id+"\n";
    }
    
    static void assign_double(String id, String value){
@@ -179,6 +199,23 @@ class LLVMGenerator{
       reg++;
    }
 
+   static void log_and(String val1, String val2){
+      main_text += "%"+reg+" = and i1 "+val1+", "+val2+"\n";
+      reg++;
+   }
+   static void log_or(String val1, String val2){
+      main_text += "%"+reg+" = or i1 "+val1+", "+val2+"\n";
+      reg++;
+   }
+   static void log_xor(String val1, String val2){
+      main_text += "%"+reg+" = xor i1 "+val1+", "+val2+"\n";
+      reg++;
+   }
+   static void log_neg(String val1){
+      main_text += "%"+reg+" = icmp eq i1 "+0+", "+val1+"\n";
+      reg++;
+   }
+
    static void sitofp(String id){
       main_text += "%"+reg+" = sitofp i32 "+id+" to double\n";
       reg++;
@@ -222,6 +259,9 @@ class LLVMGenerator{
       text += "@strs2 = constant [5 x i8] c\"%10s\\00\"\n";
       text += "@strspi = constant [3 x i8] c\"%d\\00\"\n";
       text += "@strps = constant [4 x i8] c\"%s\\0A\\00\"\n";
+      text += "@.bool_str = private constant [3 x i8] c\"%d\00\"\n";
+      text += "@.false_str = private constant [3 x i8] c\"%d\00\"\n";
+      text += "@.bool_fmt = private constant [3 x i8] c\"%s\00\"\n";
       text += "@.str = private unnamed_addr constant [3 x i8] c\"%f\00\"\n";
       text += header_text;
       text += "define i32 @main() nounwind{\n";

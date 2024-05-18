@@ -7,12 +7,16 @@ block: (stat? NL)*;
 stat: PRINT ID    #print
     | ID '=' expr    #assign
     | READ ID        #read
-    | func           #fun ;
+    | func           #fun
+    | cond           #codn;
 
 expr: value         #exprValue
+    | letter        #epxrLetter
     |simpleExpr    #exprSimple
     | first+        #exprEq
-    | boolexpr      #exprBool;
+    | boolexpr      #exprBool
+    | array         #exprArray;
+
 
 first: second (addOrSub)* #firstEq;
 
@@ -31,13 +35,16 @@ simpleExpr: value            #valueexpr
     |  LP expr RP       #par
     |  SUB value         #neg;
 
-boolexpr: expr3 ((AND|OR|XOR) expr3)*;
+boolexpr:   brackedBool expr3*
+    |       brackedBool;
 
-expr3: BOOL AND BOOL
-    |  BOOL OR BOOL
-    |  BOOL XOR BOOL
-    |  NEG BOOL
+brackedBool: LP BOOL expr3+ RP
+    |       LP BOOL RP
     |   BOOL;
+
+expr3: AND  (BOOL | brackedBool)    #and
+    |  OR  (BOOL | brackedBool)     #or
+    |  XOR  (BOOL | brackedBool)    #xor;
 
 func: IF cond THEN blockif ENDIF
     | FOR reps block ENDFOR
@@ -45,7 +52,10 @@ func: IF cond THEN blockif ENDIF
 
 blockif: block;
 
-cond: ID '==' num;
+cond: ID '==' (REAL | INT | STRING | BOOL );
+
+letter: ID LSP INT RSP   #stringLetter
+    | ID LSP INT ':' INT RSP #stringRange;
 
 reps: ID
     | INT;
@@ -56,13 +66,11 @@ value: STRING   #string
     |  REAL     #real
     |  INT      #int
     |  ID       #vid
-    |  array    #arrayval
-    |  BOOL     #bool ;
+    |  array    #arrayval;
 
-num: INT
-    | REAL ;
 
-array: LSP num (COMA num) RSP ;
+array: LSP INT (COMA INT)* RSP      #intArray
+    |  LSP REAL (COMA REAL)* RSP    #realArray;
 
 
 

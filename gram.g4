@@ -14,7 +14,7 @@ expr: value         #exprValue
     | letter        #epxrLetter
     |simpleExpr    #exprSimple
     | first+        #exprEq
-    | boolexpr      #exprBool
+    | boolexpr2      #exprBool
     | array         #exprArray;
 
 
@@ -35,12 +35,12 @@ simpleExpr: value            #valueexpr
     |  LP expr RP       #par
     |  SUB value         #neg;
 
-boolexpr:   brackedBool expr3*
+boolexpr2:   brackedBool expr3*
     |       brackedBool;
 
-brackedBool: LP BOOL expr3+ RP
-    |       LP BOOL RP
-    |   BOOL;
+brackedBool: LP BOOL expr3+ RP  #boolExprExtended
+    |       LP BOOL RP          #boolExpr
+    |   BOOL                    #bool;
 
 expr3: AND  (BOOL | brackedBool)    #and
     |  OR  (BOOL | brackedBool)     #or

@@ -38,13 +38,15 @@ simpleExpr: value            #valueexpr
 boolexpr2:   brackedBool expr3*
     |       brackedBool;
 
-brackedBool: LP BOOL expr3+ RP  #boolExprExtended
-    |       LP BOOL RP          #boolExpr
-    |   BOOL                    #bool;
+brackedBool: LP transBool expr3+ RP  #boolExprExtended
+    |       LP transBool RP          #boolExpr
+    |   transBool                    #trsBool;
 
-expr3: AND  (BOOL | brackedBool)    #and
-    |  OR  (BOOL | brackedBool)     #or
-    |  XOR  (BOOL | brackedBool)    #xor;
+expr3: AND  (transBool | brackedBool)    #and
+    |  OR  (transBool | brackedBool)     #or
+    |  XOR  (transBool | brackedBool)    #xor;
+
+transBool: BOOL     #bool;
 
 func: IF cond THEN blockif ENDIF
     | FOR reps block ENDFOR

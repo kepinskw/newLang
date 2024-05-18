@@ -212,8 +212,9 @@ public class LLVMActions extends gramBaseListener {
 
     @Override
     public void exitBool(gramParser.BoolContext ctx){
+        System.err.println("Current push: " + ctx.BOOL().getText());
         stack.push(new Value(ctx.BOOL().getText(), VarType.BOOL, 0));
-    }   
+    }
 
     @Override
     public void exitAnd(gramParser.AndContext ctx){
@@ -221,6 +222,32 @@ public class LLVMActions extends gramBaseListener {
         Value v1 = stack.pop();
         
         LLVMGenerator.log_and(v1.name, v2.name);
+        stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.BOOL,0));
+    }
+
+    @Override
+    public void exitOr(gramParser.OrContext ctx){
+        Value v2 = stack.pop();
+        Value v1 = stack.pop();
+
+        LLVMGenerator.log_or(v1.name, v2.name);
+        stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.BOOL,0));
+    }
+
+    @Override
+    public void exitXor(gramParser.XorContext ctx){
+        Value v2 = stack.pop();
+        Value v1 = stack.pop();
+
+        LLVMGenerator.log_xor(v1.name, v2.name);
+        stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.BOOL,0));
+    }
+
+    @Override
+    public void exitNeg(gramParser.NegContext ctx){
+        Value v1 = stack.pop();
+
+        LLVMGenerator.log_neg(v1.name);
         stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.BOOL,0));
     }
 

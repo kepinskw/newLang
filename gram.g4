@@ -4,7 +4,8 @@ prog: block EOF;
 
 block: (stat? NL)*;
 
-stat: PRINT ID    #print
+stat: PRINT letter #printLetter
+    | PRINT ID    #print
     | ID '=' expr    #assign
     | (ID LSP INT RSP | ID) '=' array #assignArray
     | READ ID        #read
@@ -56,8 +57,8 @@ blockif: block;
 
 cond: ID '==' (REAL | INT | STRING | BOOL );
 
-letter: ID LSP INT RSP   #stringLetter
-    | ID LSP INT ':' INT RSP #stringRange;
+letter: ID LSP INT RSP   #arrayLetter
+    | ID LSP INT ':' INT RSP #arrayRange;
 
 reps: ID
     | INT;
@@ -111,7 +112,7 @@ COMA:','  ;
 
 
 REAL: ([1-9]([0-9]|[0])*) + '.' + [0-9]+ ;
-INT: [1-9][0-9]* ;
+INT: [1-9][0-9]* | [0];
 STRING: '"'[a-zA-Z0-9]*'"';
 ID: [a-zA-Z][a-zA-Z0-9]* ;
 

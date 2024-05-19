@@ -286,8 +286,6 @@ class LLVMGenerator {
         text += "@strs2 = constant [5 x i8] c\"%10s\\00\"\n";
         text += "@strspi = constant [3 x i8] c\"%d\\00\"\n";
         text += "@strps = constant [4 x i8] c\"%s\\0A\\00\"\n";
-        text += "@.bool_str = private constant [3 x i8] c\"%d\00\"\n";
-        text += "@.false_str = private constant [3 x i8] c\"%d\00\"\n";
         text += "@true_str = private constant [6 x i8] c\"true\\0A\\00\"\n";
         text += "@false_str = private constant [7 x i8] c\"false\\0A\\00\"\n";
         text += "@.bool_fmt = private constant [3 x i8] c\"%s\00\"\n";

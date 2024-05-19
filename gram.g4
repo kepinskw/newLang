@@ -32,6 +32,7 @@ addOrSub: ADD second    #add
 simpleExpr: value            #valueexpr
     |  TOINT expr      #toint
     |  TOREAL expr     #toreal
+    |  TOFLOAT expr    #tofloat
     |  LP expr RP       #par
     |  SUB value         #neg;
 
@@ -83,6 +84,7 @@ BOOL: 'true'
 
 TOINT: '(int)' ;
 TOREAL: '(real)' ;
+TOFLOAT: '(float)';
 
 AND: 'and';
 OR:  'or' ;

@@ -40,6 +40,13 @@ class LLVMGenerator {
         reg++;
     }
 
+    static void printf_arrayi32(String id) {
+      main_text += "%" + reg + " = load i32*, i32** %" + id + "\n";
+      reg++;
+      main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strps, i32 0, i32 0), i32* %" + (reg - 1) + ")\n";
+      reg++;
+  }
+
     static void scanf_i32(String id) {
         main_text += "%" + reg + " = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strs, i32 0, i32 0), i32* %" + id + ")\n";
         reg++;
@@ -54,12 +61,16 @@ class LLVMGenerator {
         main_text += "%" + id + " = alloca [" + (l + 1) + " x i8]\n";
     }
 
-    static void scanf_double(String id) {
-        main_text += "%" + reg + "= alloca double\n";
-        main_text += "store double %" + id + ", double* %" + reg + "\n";
+    static void scanf_double(String id, String val) {
+        main_text += "%" + reg + " = alloca double\n";
+        int allocaReg = reg;
         reg++;
-        main_text += "%" + reg + " = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strs, i32 0, i32 0), double* %" + id + ")\n";
+        main_text += "store double "+ val + ", double* %" + id+ "\n";
+        main_text += "%"+ reg +" = call i32 (i8*, ...) @__isoc99_scanf(i8* noundef getelementptr inbounds ([4 x i8], [4 x i8]* @.strDouble, i64 0, i64 0), double*  %" + allocaReg + ")\n";
         reg++;
+        main_text += "%" + reg + " = load double, double* %" + allocaReg + "\n";
+        reg++;
+        main_text += "store double %"+ (reg-1) + ", double* %" + id + "\n";
     }
 
     static void scanf_string(String id, int l) {
@@ -81,7 +92,7 @@ class LLVMGenerator {
     }
 
     static void declare_array_i32(String id, int size) {
-        main_text += "%" + id + " = alloca [" + size + " x i32]\n";
+        main_text += "%" + id + " = alloca [" + (size+1) + " x i32]\n";
     }
 
     static void declare_array_double(String id, int size) {
@@ -102,13 +113,15 @@ class LLVMGenerator {
 
     static void assign_array_i32(String id, List<String> values) {
 
-        for (int i = 0; i < values.size(); i++) {
-            // Obliczanie adresu elementu wektora
-            String elementPtr = "%" + id + "_elem_" + i;
-            main_text += elementPtr + " = getelementptr inbounds [" + values.size() + " x i32], [" + values.size() + " x i32]* %" + id + ", i32 0, i32 " + i + "\n";
-            // Generowanie kodu do przypisania wartości do odpowiednich indeksów wektora
-            main_text += "store i32 " + values.get(i) + ", i32* " + elementPtr + "\n";
-        }
+      //   for (int i = 0; i < values.size(); i++) {
+      //       // Obliczanie adresu elementu wektora
+      //       String elementPtr = "%" + id + "_elem_" + i;
+      //       main_text += elementPtr + " = getelementptr inbounds [" + values.size() + " x i32], [" + values.size() + " x i32]* %" + id + ", i32 0, i32 " + i + "\n";
+      //       // Generowanie kodu do przypisania wartości do odpowiednich indeksów wektora
+      //       main_text += "store i32 " + values.get(i) + ", i32* " + elementPtr + "\n";
+      //   }
+      main_text += "store i32* %" + (reg - 1) + ", i32** %" + id + "\n";
+
     }
 
     static void assign_bool(String id, String value) {
@@ -252,6 +265,17 @@ class LLVMGenerator {
         main_text += "%" + reg + " = fptosi double " + id + " to i32\n";
         reg++;
     }
+    
+    static void dobtoflo(String id) {
+      main_text += "%" + reg + " = call i16 @llvm.convert.to.fp16.f64(double %"+ id +")\n";
+      main_text += "store i16 %"+ reg +", i16* @x";
+      reg++;
+    }
+
+    static void flotodob(String id) {
+      main_text += "%" + reg + " = fptosi double " + id + " to i32\n";
+      reg++;
+    }
 
     static void int_to_string(String in, int lout) {
         allocate_string("str" + str, lout);
@@ -274,17 +298,20 @@ class LLVMGenerator {
     static String generate() {
         String text = "";
         text += "declare i32 @printf(i8*, ...)\n";
+        text += "declare i16 @llvm.convert.to.fp16.f64(double %a)\n";
         text += "declare i32 @sprintf(i8*, i8*, ...)\n";
         text += "declare i8* @strcpy(i8*, i8*)\n";
         text += "declare i8* @strcat(i8*, i8*)\n";
         text += "declare i32 @atoi(i8*)\n";
         text += "declare i32 @__isoc99_scanf(i8*, ...)\n";
+        text += "declare double @double_scanf(i8*, ...)\n";
         text += "declare void @llvm.memcpy.p0i8.p0i8.i64(i8* noalias nocapture writeonly, i8* noalias nocapture readonly, i64, i1 immarg)\n";
         text += "@strpi = constant [4 x i8] c\"%d\\0A\\00\"\n";
         text += "@strpd = constant [4 x i8] c\"%f\\0A\\00\"\n";
         text += "@strs = constant [3 x i8] c\"%d\\00\"\n";
         text += "@strs2 = constant [5 x i8] c\"%10s\\00\"\n";
         text += "@strspi = constant [3 x i8] c\"%d\\00\"\n";
+        text += "@.strDouble = private constant [4 x i8] c\"%lf\00\"\n";
         text += "@strps = constant [4 x i8] c\"%s\\0A\\00\"\n";
         text += "@.bool_str = private constant [3 x i8] c\"%d\00\"\n";
         text += "@.false_str = private constant [3 x i8] c\"%d\00\"\n";

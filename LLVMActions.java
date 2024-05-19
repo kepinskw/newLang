@@ -2,7 +2,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-enum VarType {INT, REAL, STRING, ARRAY_i32, ARRAY_DOUBLE, BOOL, UNKNOWN}
+enum VarType {INT, REAL, FLOAT, STRING, ARRAY_i32, ARRAY_DOUBLE, BOOL, UNKNOWN}
 
 class Value {
     public String name;
@@ -84,6 +84,7 @@ public class LLVMActions extends gramBaseListener {
                 String[] content = v.name.substring(1, v.name.length() - 1).split(",");
                 List<String> contentList = Arrays.asList(content);
                 LLVMGenerator.assign_array_i32(ID, contentList);
+                variables.put(ID,v);
             }else {
                 System.err.println("name: " + ID);
                 System.err.println("len: " + len);
@@ -254,6 +255,13 @@ public class LLVMActions extends gramBaseListener {
     }
 
     @Override
+    public void exitTofloat(gramParser.TofloatContext ctx) {
+        Value v = stack.pop();
+        LLVMGenerator.dobtoflo(v.name);
+        stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL, 0));
+    }
+
+    @Override
     public void exitBool(gramParser.BoolContext ctx) {
         System.err.println("Current push: " + ctx.BOOL().getText());
         stack.push(new Value(ctx.BOOL().getText(), VarType.BOOL, 0));
@@ -261,7 +269,7 @@ public class LLVMActions extends gramBaseListener {
 
     @Override
     public void exitAnd(gramParser.AndContext ctx) {
-        System.err.println("AND: ");
+        
 
         Value v2 = stack.pop();
         Value v1 = stack.pop();
@@ -301,6 +309,7 @@ public class LLVMActions extends gramBaseListener {
     public void exitPrint(gramParser.PrintContext ctx) {
         String ID = ctx.ID().getText();
         Value v = variables.get(ID);
+        System.err.println("typ:" + v.type);
         if (v.type != null) {
             if (v.type == VarType.INT) {
                 LLVMGenerator.printf_i32(ID);
@@ -313,6 +322,9 @@ public class LLVMActions extends gramBaseListener {
             }
             if (v.type == VarType.BOOL) {
                 LLVMGenerator.printf_bool(ID);
+            }
+            if (v.type == VarType.ARRAY_i32) {
+                LLVMGenerator.printf_arrayi32(ID);
             }
         } else {
             error(ctx.getStart().getLine(), "unknown variable type" + ID);
@@ -329,7 +341,7 @@ public class LLVMActions extends gramBaseListener {
         if (v.type == VarType.INT) {
             LLVMGenerator.scanf_i32(ID);
         } else if (v.type == VarType.REAL) {
-            LLVMGenerator.scanf_double(ID);
+            LLVMGenerator.scanf_double(ID, v.name);
         } else if (v.type == VarType.STRING) {
             LLVMGenerator.scanf_string(ID, BUFFER_SIZE);
         } else if (v.type == VarType.BOOL) {

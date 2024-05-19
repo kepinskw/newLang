@@ -7,7 +7,7 @@ block: (stat? NL)*;
 stat: PRINT letter #printLetter
     | PRINT ID    #print
     | ID '=' expr    #assign
-    | (ID LSP INT RSP | ID) '=' array #assignArray
+    | (ID LFP INT RFP | ID) '=' array #assignArray
     | READ ID        #read
     | func           #fun
     | cond           #codn;
@@ -111,6 +111,8 @@ RP:  ')'  ;
 LSP: '['  ;
 RSP: ']'  ;
 COMA:','  ;
+RFP: '}'  ;
+LFP: '{'  ;
 
 
 REAL: ([1-9]([0-9]|[0])*) + '.' + [0-9]+ ;

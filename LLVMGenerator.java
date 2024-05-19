@@ -40,12 +40,27 @@ class LLVMGenerator {
         reg++;
     }
 
-    static void printf_arrayi32(String id) {
-      main_text += "%" + reg + " = load i32*, i32** %" + id + "\n";
-      reg++;
-      main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strps, i32 0, i32 0), i32* %" + (reg - 1) + ")\n";
-      reg++;
-  }
+    static void printf_array_i32_element(String id, Integer size, Integer position) {
+        main_text += "%" + reg + " = getelementptr inbounds [" + size + " x i32], [" + size + " x i32]* %" + id + ", i32 0, i32 " + position + "\n";
+        reg++;
+        // Załaduj wartość elementu z obliczonego adresu
+        main_text += "%" + reg + " = load i32, i32* %" + (reg - 1) + "\n";
+        reg++;
+        // Wywołaj funkcję printf, aby wydrukować wartość elementu
+        main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strpi, i32 0, i32 0), i32 %" + (reg - 1) + ")\n";
+        reg++;
+    }
+
+    static void printf_array_double_element(String id, Integer size, Integer position) {
+        main_text += "%" + reg + " = getelementptr inbounds [" + size + " x double], [" + size + " x double]* %" + id + ", i32 0, i32 " + position + "\n";
+        reg++;
+        // Załaduj wartość elementu z obliczonego adresu
+        main_text += "%" + reg + " = load double, double* %" + (reg - 1) + "\n";
+        reg++;
+        // Wywołaj funkcję printf, aby wydrukować wartość elementu
+        main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strpd, i32 0, i32 0), double %" + (reg - 1) + ")\n";
+        reg++;
+    }
 
     static void scanf_i32(String id) {
         main_text += "%" + reg + " = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strs, i32 0, i32 0), i32* %" + id + ")\n";
@@ -65,12 +80,12 @@ class LLVMGenerator {
         main_text += "%" + reg + " = alloca double\n";
         int allocaReg = reg;
         reg++;
-        main_text += "store double "+ val + ", double* %" + id+ "\n";
-        main_text += "%"+ reg +" = call i32 (i8*, ...) @__isoc99_scanf(i8* noundef getelementptr inbounds ([4 x i8], [4 x i8]* @.strDouble, i64 0, i64 0), double*  %" + allocaReg + ")\n";
+        main_text += "store double " + val + ", double* %" + id + "\n";
+        main_text += "%" + reg + " = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.strDouble, i64 0, i64 0), double*  %" + allocaReg + ")\n";
         reg++;
         main_text += "%" + reg + " = load double, double* %" + allocaReg + "\n";
         reg++;
-        main_text += "store double %"+ (reg-1) + ", double* %" + id + "\n";
+        main_text += "store double %" + (reg - 1) + ", double* %" + id + "\n";
     }
 
     static void scanf_string(String id, int l) {
@@ -92,7 +107,7 @@ class LLVMGenerator {
     }
 
     static void declare_array_i32(String id, int size) {
-        main_text += "%" + id + " = alloca [" + (size+1) + " x i32]\n";
+        main_text += "%" + id + " = alloca [" + (size) + " x i32]\n";
     }
 
     static void declare_array_double(String id, int size) {
@@ -111,16 +126,46 @@ class LLVMGenerator {
         main_text += "store i32 " + value + ", i32* %" + id + "\n";
     }
 
+    static void assign_i32_from_array(String array_id,String destination_id, Integer size,Integer position) {
+        main_text += "%" + reg + " = getelementptr inbounds [" + size + " x i32], [" + size + " x i32]* %" + array_id + ", i32 0, i32 " + position + "\n";
+        reg++;
+        // Załaduj wartość elementu z obliczonego adresu
+        main_text += "%" + reg + " = load i32, i32* %" + (reg - 1) + "\n";
+        reg++;
+        // Zapisz załadowaną wartość do zmiennej docelowej
+        main_text += "store i32 %" + (reg - 1) + ", i32* %" + destination_id + "\n";
+    }
+
     static void assign_array_i32(String id, List<String> values) {
 
-      //   for (int i = 0; i < values.size(); i++) {
-      //       // Obliczanie adresu elementu wektora
-      //       String elementPtr = "%" + id + "_elem_" + i;
-      //       main_text += elementPtr + " = getelementptr inbounds [" + values.size() + " x i32], [" + values.size() + " x i32]* %" + id + ", i32 0, i32 " + i + "\n";
-      //       // Generowanie kodu do przypisania wartości do odpowiednich indeksów wektora
-      //       main_text += "store i32 " + values.get(i) + ", i32* " + elementPtr + "\n";
-      //   }
-      main_text += "store i32* %" + (reg - 1) + ", i32** %" + id + "\n";
+        for (int i = 0; i < values.size(); i++) {
+            // Obliczanie adresu elementu wektora
+            String elementPtr = "%" + id + "_elem_" + i;
+            main_text += elementPtr + " = getelementptr inbounds [" + values.size() + " x i32], [" + values.size() + " x i32]* %" + id + ", i32 0, i32 " + i + "\n";
+            // Generowanie kodu do przypisania wartości do odpowiednich indeksów wektora
+            main_text += "store i32 " + values.get(i) + ", i32* " + elementPtr + "\n";
+        }
+    }
+
+    static void assign_array_double(String id, List<String> values) {
+
+        for (int i = 0; i < values.size(); i++) {
+            // Obliczanie adresu elementu wektora
+            String elementPtr = "%" + id + "_elem_" + i;
+            main_text += elementPtr + " = getelementptr inbounds [" + values.size() + " x double], [" + values.size() + " x double]* %" + id + ", i32 0, i32 " + i + "\n";
+            // Generowanie kodu do przypisania wartości do odpowiednich indeksów wektora
+            main_text += "store double " + values.get(i) + ", double* " + elementPtr + "\n";
+        }
+    }
+
+    static void assign_double_from_array(String array_id,String destination_id, Integer size,Integer position) {
+        main_text += "%" + reg + " = getelementptr inbounds [" + size + " x double], [" + size + " x double]* %" + array_id + ", i32 0, i32 " + position + "\n";
+        reg++;
+        // Załaduj wartość elementu z obliczonego adresu
+        main_text += "%" + reg + " = load double, double* %" + (reg - 1) + "\n";
+        reg++;
+        // Zapisz załadowaną wartość do zmiennej docelowej
+        main_text += "store double %" + (reg - 1) + ", double* %" + destination_id + "\n";
 
     }
 
@@ -265,16 +310,16 @@ class LLVMGenerator {
         main_text += "%" + reg + " = fptosi double " + id + " to i32\n";
         reg++;
     }
-    
+
     static void dobtoflo(String id) {
-      main_text += "%" + reg + " = call i16 @llvm.convert.to.fp16.f64(double %"+ id +")\n";
-      main_text += "store i16 %"+ reg +", i16* @x";
-      reg++;
+        main_text += "%" + reg + " = call i16 @llvm.convert.to.fp16.f64(double %" + id + ")\n";
+        main_text += "store i16 %" + reg + ", i16* @x";
+        reg++;
     }
 
     static void flotodob(String id) {
-      main_text += "%" + reg + " = fptosi double " + id + " to i32\n";
-      reg++;
+        main_text += "%" + reg + " = fptosi double " + id + " to i32\n";
+        reg++;
     }
 
     static void int_to_string(String in, int lout) {

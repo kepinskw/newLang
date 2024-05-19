@@ -1,3 +1,6 @@
-a = 3.0     //double
-b = (float)1.0
+a{3} = [1.5,3.9,2.21]
+print a[1]
+b = a[0]
+print b
+c = a[10]
 

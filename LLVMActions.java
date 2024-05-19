@@ -2,7 +2,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-enum VarType {INT, REAL, STRING, ARRAY_i32,ARRAY_i32_ELEM, ARRAY_DOUBLE, BOOL, UNKNOWN}
+enum VarType {INT, REAL, FLOAT, STRING, ARRAY_i32,ARRAY_i32_ELEM, ARRAY_DOUBLE, BOOL, UNKNOWN}
 
 class Value {
     public String name;
@@ -84,7 +84,6 @@ public class LLVMActions extends gramBaseListener {
                 String[] content = v.name.substring(1, v.name.length() - 1).split(",");
                 List<String> contentList = Arrays.asList(content);
                 LLVMGenerator.assign_array_i32(ID, contentList);
-                variables.put(ID,v);
             }else {
                 System.err.println("name: " + ID);
                 System.err.println("len: " + len);
@@ -98,14 +97,6 @@ public class LLVMActions extends gramBaseListener {
         }
 
 
-    }
-
-    @Override
-    public void exitArrayLetter(gramParser.ArrayLetterContext ctx){
-        String ID = ctx.ID().getText();
-        String textInt = ctx.INT().getText();
-        Integer INT = Integer.parseInt(textInt);
-        stack.push(new Value(ID, VarType.INT, INT));
     }
 
     @Override
@@ -324,22 +315,6 @@ public class LLVMActions extends gramBaseListener {
                 LLVMGenerator.printf_bool(ID);
             }
         } else {
-            error(ctx.getStart().getLine(), "unknown variable type" + ID);
-        }
-    }
-
-    @Override
-    public void exitPrintLetter(gramParser.PrintLetterContext ctx){
-        String IDstring = ctx.letter().getText();
-        String ID = IDstring.replaceAll("\\[\\d+\\]", "");
-
-        Value v = variables.get(ID);
-        if (v.type != null) {
-            if (v.type == VarType.ARRAY_i32){
-                Value id  = stack.pop();
-                LLVMGenerator.printf_array_i32_element(ID, v.length,id.length);
-            }
-        }else {
             error(ctx.getStart().getLine(), "unknown variable type" + ID);
         }
     }

@@ -38,48 +38,55 @@ public class LLVMActions extends gramBaseListener {
             if (!variables.containsKey(ID)) {
                 LLVMGenerator.declare_i32(ID);
                 variables.put(ID, v);
+            }else if(variables.get(ID).type != VarType.INT){
+                error(ctx.getStart().getLine(), "Type missmach");
             }
             LLVMGenerator.assign_i32(ID, v.name);
-        }
-        if (v.type == VarType.REAL) {
+        }else if (v.type == VarType.REAL) {
             if (!variables.containsKey(ID)) {
                 LLVMGenerator.declare_double(ID);
                 variables.put(ID, v);
+            }else if(variables.get(ID).type != VarType.REAL){
+                error(ctx.getStart().getLine(), "Type missmach");
             }
             LLVMGenerator.assign_double(ID, v.name);
-        }
-        if (v.type == VarType.STRING) {
+        }else if (v.type == VarType.STRING) {
             if (!variables.containsKey(ID)) {
                 LLVMGenerator.declare_string(ID);
                 variables.put(ID, v);
+            }else if(variables.get(ID).type != VarType.STRING){
+                error(ctx.getStart().getLine(), "Type missmach");
             }
             LLVMGenerator.assign_string(ID);
-        }
-        if (v.type == VarType.BOOL) {
+        }else if (v.type == VarType.BOOL) {
             if (!variables.containsKey(ID)) {
                 LLVMGenerator.declare_bool(ID);
                 variables.put(ID, v);
+            }else if(variables.get(ID).type != VarType.BOOL){
+                error(ctx.getStart().getLine(), "Type missmach");
             }
             LLVMGenerator.assign_bool(ID, v.name);
-        }
-        if(v.type == VarType.ARRAY_i32){
+        }else if(v.type == VarType.ARRAY_i32){
             Value realValue = stack.pop();
             Value array = variables.get(v.name);
             System.err.println("v.nameee  " + v.name);
             if (!variables.containsKey(ID)) {
                 LLVMGenerator.declare_i32(ID);
                 variables.put(ID, new Value(realValue.name,VarType.INT,1));
+            }else if(v.type != VarType.INT){
+                error(ctx.getStart().getLine(), "Type missmach");
             }
             LLVMGenerator.assign_i32_from_array(v.name,ID,array.length, Integer.parseInt(realValue.name));
 
-        }
-        if(v.type == VarType.ARRAY_DOUBLE){
+        }else if(v.type == VarType.ARRAY_DOUBLE){
             Value realValue = stack.pop();
             Value array = variables.get(v.name);
             System.err.println("v.nameee  " + v.name);
             if (!variables.containsKey(ID)) {
                 LLVMGenerator.declare_double(ID);
                 variables.put(ID, new Value(realValue.name,VarType.REAL,1));
+            }else if(v.type != VarType.REAL){
+                error(ctx.getStart().getLine(), "Type missmach");
             }
             LLVMGenerator.assign_double_from_array(v.name,ID,array.length, Integer.parseInt(realValue.name));
 

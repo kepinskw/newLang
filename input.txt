@@ -1,4 +1,3 @@
-a=(false or true) and ((false and false) or false)
-print a
-
+a = 3.0     //double
+b = (float)1.0
 

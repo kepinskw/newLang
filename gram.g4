@@ -11,8 +11,7 @@ stat: ID LSP INT RSP '=' value    #assignArrayElem
     | (ID LFP INT RFP | ID) '=' array #assignArray
     | (ID LFP INT RFP LFP INT RFP | ID) '=' matrix  #assignMatrix
     | READ ID        #read
-    | func           #fun
-    | cond           #codn;
+    | func           #fun;
 
 printElem: ID   #print
     |   letter  #printLetter;
@@ -55,13 +54,13 @@ expr3: AND  (transBool | brackedBool)    #and
 
 transBool: BOOL     #bool;
 
-func: IF cond THEN blockif ENDIF
-    | FOR reps block ENDFOR
-    | FUN fpar block ENDFUN ;
+func: IF cond THEN blockif ENDIF  #if
+    | FOR reps block ENDFOR       #for 
+    | FUN fpar block ENDFUN       #function;
 
 blockif: block;
 
-cond: ID '==' (REAL | INT | STRING | BOOL );
+cond: ID '==' INT;
 
 letter: ID LSP INT RSP   #arrayLetter
     | ID LSP INT RSP LSP INT RSP    #matrixLetter

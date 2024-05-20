@@ -4,12 +4,17 @@ prog: block EOF;
 
 block: (stat? NL)*;
 
-stat: PRINT ID    #print
+stat: ID LSP INT RSP '=' value    #assignArrayElem
+    | PRINT printElem   #printSmth
     | ID '=' expr    #assign
-    | (ID LSP INT RSP | ID) '=' array #assignArray
+    | (ID LFP INT RFP | ID) '=' array #assignArray
+    | (ID LFP INT RFP LFP INT RFP | ID) '=' matrix  #assignMatrix
     | READ ID        #read
     | func           #fun
     | cond           #codn;
+
+printElem: ID   #print
+    |   letter  #printLetter;
 
 expr: value         #exprValue
     | letter        #epxrLetter
@@ -57,8 +62,8 @@ blockif: block;
 
 cond: ID '==' (REAL | INT | STRING | BOOL );
 
-letter: ID LSP INT RSP   #stringLetter
-    | ID LSP INT ':' INT RSP #stringRange;
+letter: ID LSP INT RSP   #arrayLetter
+    | ID LSP INT ':' INT RSP #arrayRange;
 
 reps: ID
     | INT;
@@ -74,6 +79,12 @@ value: STRING   #string
 array: LSP INT (COMA INT)* RSP      #intArray
     |  LSP REAL (COMA REAL)* RSP    #realArray;
 
+matrix: LSP matrixRowInt (SEMICOLON matrixRowInt) RSP   #intMatrix
+    | LSP matrixRowDouble (SEMICOLON matrixRowDouble) RSP   #doubleMatrix;
+
+matrixRowInt: (INT (COMA INT)*);
+
+matrixRowDouble: (REAL (COMA REAL)*);
 
 
 
@@ -110,10 +121,13 @@ RP:  ')'  ;
 LSP: '['  ;
 RSP: ']'  ;
 COMA:','  ;
+RFP: '}'  ;
+LFP: '{'  ;
+SEMICOLON: ';';
 
 
 REAL: ([1-9]([0-9]|[0])*) + '.' + [0-9]+ ;
-INT: [1-9][0-9]* ;
+INT: [1-9][0-9]* | [0];
 STRING: '"'[a-zA-Z0-9]*'"';
 ID: [a-zA-Z][a-zA-Z0-9]* ;
 

@@ -1,4 +1,1 @@
-a=(false or true) and ((false and false) or false)
-print a
-
-
+a{2}{2}=[1,2;3,4]

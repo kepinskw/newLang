@@ -66,6 +66,42 @@ class LLVMGenerator {
         reg++;
     }
 
+    static void printf_matrix_i32_element(String id, int rows, int columns, int rowId, int colId) {
+        int position = rowId * columns + colId; // Obliczenie pozycji elementu w macierzy
+
+        // Obliczanie adresu elementu macierzy
+        main_text += "%" + reg + " = getelementptr inbounds [" + rows + " x [" + columns + " x i32]], [" + rows + " x [" + columns + " x i32]]* %" + id + ", i32 0, i32 0, i32 " + position + "\n";
+        reg++;
+
+        // Załaduj wartość elementu z obliczonego adresu
+        main_text += "%" + reg + " = load i32, i32* %" + (reg - 1) + "\n";
+        reg++;
+
+        // Wywołaj funkcję printf, aby wydrukować wartość elementu
+        main_text += "call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strpi, i32 0, i32 0), i32 %" + (reg - 1) + ")\n";
+        reg++;
+    }
+
+    static void printf_array_i32_from_matrix(String id, int rows, int columns, int rowId) {
+        for (int i = 0; i < columns; i++) {
+            // Obliczanie adresu elementu kolumny macierzy
+            main_text += "%" + reg + " = getelementptr inbounds [" + rows + " x [" + columns + " x i32]], [" + rows + " x [" + columns + " x i32]]* %" + id + ", i32 0, i32 " + rowId + ", i32 " + i + "\n";
+            reg++;
+            // Załaduj wartość elementu z obliczonego adresu
+            main_text += "%" + reg + " = load i32, i32* %" + (reg - 1) + "\n";
+            reg++;
+            String formatStr = "[4 x i8], [4 x i8]* @str_format";
+            if (i == 0) {
+                formatStr = "[5 x i8], [5 x i8]* @str_first_format";
+            } else if (i == columns - 1) {
+                formatStr = "[5 x i8], [5 x i8]* @str_last_format";
+            }
+            // Wywołaj funkcję printf, aby wydrukować wartość elementu
+            main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds (" + formatStr + ", i32 0, i32 0), i32 %" + (reg - 1) + ")\n";
+            reg++;
+        }
+    }
+
     static void printf_array_i32(String id, Integer size) {
         for (int i = 0; i < size; i++) {
             main_text += "%" + reg + " = getelementptr inbounds [" + size + " x i32], [" + size + " x i32]* %" + id + ", i32 0, i32 " + i + "\n";
@@ -82,6 +118,32 @@ class LLVMGenerator {
             // Wywołaj funkcję printf, aby wydrukować wartość elementu
             main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds (" + formatStr + ", i32 0, i32 0), i32 %" + (reg - 1) + ")\n";
             reg++;
+        }
+    }
+
+    static void printf_matrix_i32(String id, int row, int col) {
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+                // Obliczanie adresu elementu macierzy
+                main_text += "%" + reg + " = getelementptr inbounds [" + row + " x [" + col + " x i32]], [" + row + " x [" + col + " x i32]]* %" + id + ", i32 0, i32 " + i + ", i32 " + j + "\n";
+                reg++;
+                // Załaduj wartość elementu z obliczonego adresu
+                main_text += "%" + reg + " = load i32, i32* %" + (reg - 1) + "\n";
+                reg++;
+                String formatStr = "[4 x i8], [4 x i8]* @str_format";
+                if (i == 0 && j == 0) {
+                    formatStr = "[5 x i8], [5 x i8]* @str_first_format";
+                } else if (i == row - 1 && j == col - 1) {
+                    formatStr = "[5 x i8], [5 x i8]* @str_last_format";
+                } else if (i != row -1 && j == col - 1) {
+                    formatStr = "[5 x i8], [5 x i8]* @str_row_last_format";
+                } else if (i != 0 && j == 0) {
+                    formatStr = "[5 x i8], [5 x i8]* @str_row_first_format";
+                }
+                // Wywołaj funkcję printf, aby wydrukować wartość elementu
+                main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds (" + formatStr + ", i32 0, i32 0), i32 %" + (reg - 1) + ")\n";
+                reg++;
+            }
         }
     }
 
@@ -171,6 +233,11 @@ class LLVMGenerator {
         main_text += "%" + id + " = alloca [" + (size) + " x i32]\n";
     }
 
+    static void declare_matrix_i32(String id, int rows,int columns) {
+        main_text += "%" + id + " = alloca [" + rows + " x [ " + columns + " x i32 ]]\n";
+
+    }
+
     static void declare_array_double(String id, int size) {
         main_text += "%" + id + " = alloca [" + size + " x double]\n";
     }
@@ -197,6 +264,41 @@ class LLVMGenerator {
         main_text += "store i32 %" + (reg - 1) + ", i32* %" + destination_id + "\n";
     }
 
+    static void assign_array_i32_from_matrix(String matrix_id, String destination_id, Integer rowSize, Integer colSize, Integer row){
+        for (int col = 0; col < colSize; col++) {
+            // Obliczanie adresu elementu macierzy
+            main_text += "%" + reg + " = getelementptr inbounds [" + rowSize + " x [" + colSize + " x i32]], [" + rowSize + " x [" + colSize + " x i32]]* %" + matrix_id + ", i32 0, i32 " + row + ", i32 " + col + "\n";
+            reg++;
+
+            // Załaduj wartość elementu z obliczonego adresu
+            main_text += "%" + reg + " = load i32, i32* %" + (reg - 1) + "\n";
+            reg++;
+
+            // Obliczanie adresu w docelowym buforze
+            main_text += "%" + reg + " = getelementptr inbounds [" + colSize + " x i32], [" + colSize + " x i32]* %" + destination_id + ", i32 0, i32 " + col + "\n";
+            reg++;
+
+            // Zapisz załadowaną wartość do odpowiedniego miejsca w docelowym buforze
+            main_text += "store i32 %" + (reg - 2) + ", i32* %" + (reg - 1) + "\n";
+        }
+
+    }
+
+    static void assign_i32_from_matrix(String matrix_id, String destination_id, Integer rowSize,Integer colSize, Integer row,Integer col) {
+        int position = row * colSize + col; // Obliczanie pozycji elementu w macierzy
+
+        // Obliczanie adresu elementu macierzy
+        main_text += "%" + reg + " = getelementptr inbounds [" + rowSize + " x [" + colSize + " x i32]], [" + rowSize + " x [" + colSize + " x i32]]* %" + matrix_id + ", i32 0, i32 0, i32 " + position + "\n";
+        reg++;
+
+        // Załaduj wartość elementu z obliczonego adresu
+        main_text += "%" + reg + " = load i32, i32* %" + (reg - 1) + "\n";
+        reg++;
+
+        // Zapisz załadowaną wartość do zmiennej docelowej
+        main_text += "store i32 %" + (reg - 1) + ", i32* %" + destination_id + "\n";
+    }
+
     static void assign_array_i32(String id, List<String> values) {
 
         for (int i = 0; i < values.size(); i++) {
@@ -209,12 +311,37 @@ class LLVMGenerator {
         }
     }
 
+    static void assign_matrix_i32(String id, int rows, int cols, List<String> values) {
+        int index = 0;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                // Obliczanie adresu elementu macierzy
+                main_text += "%" + reg + " = getelementptr inbounds [" + rows + " x [" + cols + " x i32]], [" + rows + " x [" + cols + " x i32]]* %" + id + ", i32 0, i32 " + i + ", i32 " + j + "\n";
+                // Generowanie kodu do przypisania wartości do odpowiednich indeksów macierzy
+                main_text += "store i32 " + values.get(index) + ", i32* %" + reg + "\n";
+                reg++;
+                index++;
+            }
+        }
+    }
+
     static void assign_array_i32_element(String id, Integer value, Integer size, Integer position) {
         // Obliczanie adresu elementu wektora
         //String elementPtr = "%" + id + "_elem_" + i;
         main_text += "%" + reg + " = getelementptr inbounds [" + size + " x i32], [" + size + " x i32]* %" + id + ", i32 0, i32 " + position + "\n";
         // Generowanie kodu do przypisania wartości do odpowiednich indeksów wektora
         main_text += "store i32 " + value + ", i32* %" + (reg) + "\n";
+        reg++;
+    }
+
+    static void assign_matrix_i32_element(String id, int value, int rowSize, int colSize, int rowId, int colId) {
+        int position = rowId * colSize + colId; // Obliczenie pozycji elementu w macierzy
+
+        // Obliczanie adresu elementu macierzy
+        main_text += "%" + reg + " = getelementptr inbounds [" + rowSize + " x [" + colSize + " x i32]], [" + rowSize + " x [" + colSize + " x i32]]* %" + id + ", i32 0, i32 0, i32 " + position + "\n";
+
+        // Generowanie kodu do przypisania wartości do odpowiedniego elementu macierzy
+        main_text += "store i32 " + value + ", i32* %" + reg + "\n";
         reg++;
     }
 
@@ -231,6 +358,17 @@ class LLVMGenerator {
     }
 
     static void assign_double_from_array(String array_id, String destination_id, Integer size, Integer position) {
+        main_text += "%" + reg + " = getelementptr inbounds [" + size + " x double], [" + size + " x double]* %" + array_id + ", i32 0, i32 " + position + "\n";
+        reg++;
+        // Załaduj wartość elementu z obliczonego adresu
+        main_text += "%" + reg + " = load double, double* %" + (reg - 1) + "\n";
+        reg++;
+        // Zapisz załadowaną wartość do zmiennej docelowej
+        main_text += "store double %" + (reg - 1) + ", double* %" + destination_id + "\n";
+
+    }
+
+    static void assign_double_from_matrix(String array_id, String destination_id, Integer size, Integer position) {
         main_text += "%" + reg + " = getelementptr inbounds [" + size + " x double], [" + size + " x double]* %" + array_id + ", i32 0, i32 " + position + "\n";
         reg++;
         // Załaduj wartość elementu z obliczonego adresu
@@ -530,7 +668,9 @@ class LLVMGenerator {
         text += "@strs2 = constant [5 x i8] c\"%10s\\00\"\n";
         text += "@strspi = constant [3 x i8] c\"%d\\00\"\n";
         text += "@str_first_format =  constant [5 x i8] c\"[%d,\\00\"\n";
+        text += "@str_row_first_format =  constant [5 x i8] c\" %d,\\00\"\n";
         text += "@str_format =  constant [4 x i8] c\"%d,\\00\"\n";
+        text += "@str_row_last_format =  constant [5 x i8] c\"%d;\\0A\\00\"\n";
         text += "@str_last_format =  constant [5 x i8] c\"%d]\\0A\\00\"\n";
         text += "@str_first_format_double =  constant [5 x i8] c\"[%f,\\00\"\n";
         text += "@str_format_double =  constant [4 x i8] c\"%f,\\00\"\n";

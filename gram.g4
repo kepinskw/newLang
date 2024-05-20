@@ -5,6 +5,7 @@ prog: block EOF;
 block: (stat? NL)*;
 
 stat: ID LSP INT RSP '=' value    #assignArrayElem
+    | ID LSP INT RSP LSP INT RSP '=' value  #assignMatrixElem
     | PRINT printElem   #printSmth
     | ID '=' expr    #assign
     | (ID LFP INT RFP | ID) '=' array #assignArray
@@ -62,6 +63,7 @@ blockif: block;
 cond: ID '==' INT;
 
 letter: ID LSP INT RSP   #arrayLetter
+    | ID LSP INT RSP LSP INT RSP    #matrixLetter
     | ID LSP INT ':' INT RSP #arrayRange;
 
 reps: ID
@@ -78,8 +80,8 @@ value: STRING   #string
 array: LSP INT (COMA INT)* RSP      #intArray
     |  LSP REAL (COMA REAL)* RSP    #realArray;
 
-matrix: LSP matrixRowInt (SEMICOLON matrixRowInt) RSP   #intMatrix
-    | LSP matrixRowDouble (SEMICOLON matrixRowDouble) RSP   #doubleMatrix;
+matrix: LSP matrixRowInt (SEMICOLON matrixRowInt)+ RSP   #intMatrix
+    | LSP matrixRowDouble (SEMICOLON matrixRowDouble)+ RSP   #doubleMatrix;
 
 matrixRowInt: (INT (COMA INT)*);
 

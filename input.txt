@@ -1,36 +1,9 @@
-a{3}{3}=[1,2,3;3,4,5;165,245,347]
-print a
-b=a[2]
-print b
-c=b[0]
+a =  (float) 10.12
+b = 2.2
+c = a - b
 print c
 
-c=5
-d = "tojestnumer"
-e = d + c
-print e
-b[0]= 13
-print b
-a[0][0] = 99
-print a
-
-z = "done"
-x = 2
-y = 3
-
-read x
-read y
-
-if x == 1 then
-print x
-if y == 2 then
-print z
-endif
-endif
-
-read y
-for 2
-for y
-print z
-endfor
-endfor
+d = 5
+e = 1
+f = d - e
+print f

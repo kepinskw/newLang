@@ -45,6 +45,7 @@ public class LLVMActions extends gramBaseListener {
                 LLVMGenerator.declare_double(ID);
                 variables.put(ID, v);
             }
+            System.err.println("ASSIGN REAK: " + v.name);
             LLVMGenerator.assign_double(ID, v.name);
         }
         if (v.type == VarType.STRING) {
@@ -60,6 +61,13 @@ public class LLVMActions extends gramBaseListener {
                 variables.put(ID, v);
             }
             LLVMGenerator.assign_bool(ID, v.name);
+        }if (v.type == VarType.FLOAT) {
+            if (!variables.containsKey(ID)) {
+                LLVMGenerator.declare_float(ID);
+                variables.put(ID, v);
+            }
+            System.err.println("ASSIGN: " + v.name);
+            LLVMGenerator.assign_float(ID, v.name);
         }
 
     }
@@ -105,6 +113,7 @@ public class LLVMActions extends gramBaseListener {
         String ID = ctx.ID().getText();
         if (variables.containsKey(ID)) {
             Value v = variables.get(ID);
+            System.err.println("Current push: " + v.name);
             if (v.type == VarType.INT) {
                 LLVMGenerator.load_i32(ID);
             }
@@ -113,6 +122,9 @@ public class LLVMActions extends gramBaseListener {
             }
             if (v.type == VarType.STRING) {
                 LLVMGenerator.load_string(ID);
+            }
+            if (v.type == VarType.FLOAT) {
+                LLVMGenerator.load_float(ID);
             }
             stack.push(new Value("%" + (LLVMGenerator.reg - 1), v.type, v.length));
         } else {
@@ -155,6 +167,8 @@ public class LLVMActions extends gramBaseListener {
         }
         Value v2 = stack.pop();
         Value v1 = stack.pop();
+        System.err.println("typ:" + v2.type);
+        System.err.println("typ:" + v1.type);
 
         if (v1.type == v2.type) {
             if (v1.type == VarType.INT) {
@@ -169,7 +183,22 @@ public class LLVMActions extends gramBaseListener {
                 LLVMGenerator.add_string(v1.name, v1.length, v2.name, v2.length);
                 stack.push(new Value("%" + (LLVMGenerator.reg - 3), VarType.STRING, v1.length));
             }
-        } else if (v1.type == VarType.STRING && v2.type == VarType.INT) {
+            if (v1.type == VarType.FLOAT){
+                LLVMGenerator.add_float(v1.name, v2.name);
+                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.FLOAT, 0));
+            }
+        }else if (v1.type == VarType.FLOAT && v2.type == VarType.REAL) {
+            LLVMGenerator.dobtoflo(v2.name);;
+            v2.name = "%" + (LLVMGenerator.reg - 1);
+            LLVMGenerator.add_float(v1.name, v2.name);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.FLOAT, 0));
+        } else if (v1.type == VarType.REAL && v2.type == VarType.FLOAT) {
+            LLVMGenerator.flotodob(v2.name);;
+            v2.name = "%" + (LLVMGenerator.reg - 1);
+            LLVMGenerator.add_double(v1.name, v2.name);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL, 0));
+        }
+        else if (v1.type == VarType.STRING && v2.type == VarType.INT) {
             LLVMGenerator.int_to_string(v2.name, BUFFER_SIZE);
             v2.name = "%" + (LLVMGenerator.reg - 2);
             LLVMGenerator.add_string(v1.name, v1.length, v2.name, BUFFER_SIZE);
@@ -195,7 +224,21 @@ public class LLVMActions extends gramBaseListener {
             LLVMGenerator.sub_double(v1.name, v2.name);
             stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL, 0));
 
-        } else {
+        } else if (v1.type == VarType.FLOAT){
+            LLVMGenerator.sub_float(v1.name, v2.name);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.FLOAT, 0));
+        }else if (v1.type == VarType.FLOAT && v2.type == VarType.REAL) {
+            LLVMGenerator.dobtoflo(v2.name);;
+            v2.name = "%" + (LLVMGenerator.reg - 1);
+            LLVMGenerator.sub_float(v1.name, v2.name);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.FLOAT, 0));
+        } else if (v1.type == VarType.REAL && v2.type == VarType.FLOAT) {
+            LLVMGenerator.flotodob(v2.name);;
+            v2.name = "%" + (LLVMGenerator.reg - 1);
+            LLVMGenerator.sub_double(v1.name, v2.name);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL, 0));
+        }
+        else {
             error(ctx.getStart().getLine(), "negation type mismatch " + v1.type + " ");
         }
     }
@@ -214,6 +257,21 @@ public class LLVMActions extends gramBaseListener {
                 LLVMGenerator.mult_double(v1.name, v2.name);
                 stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL, 0));
             }
+            if (v1.type == VarType.FLOAT){
+                LLVMGenerator.mult_float(v1.name, v2.name);
+                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.FLOAT, 0));
+            }
+
+        }else if (v1.type == VarType.FLOAT && v2.type == VarType.REAL) {
+            LLVMGenerator.dobtoflo(v2.name);;
+            v2.name = "%" + (LLVMGenerator.reg - 1);
+            LLVMGenerator.mult_float(v1.name, v2.name);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.FLOAT, 0));
+        } else if (v1.type == VarType.REAL && v2.type == VarType.FLOAT) {
+            LLVMGenerator.flotodob(v2.name);;
+            v2.name = "%" + (LLVMGenerator.reg - 1);
+            LLVMGenerator.mult_double(v1.name, v2.name);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL, 0));
         } else {
             error(ctx.getStart().getLine(), "multiplication type mismatch");
         }
@@ -234,7 +292,21 @@ public class LLVMActions extends gramBaseListener {
                 LLVMGenerator.div_double(v2.name, v1.name);
                 stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL, 0));
             }
-        } else {
+            if (v1.type == VarType.FLOAT){
+                LLVMGenerator.div_double(v2.name, v1.name);
+                stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.FLOAT, 0));
+            }
+        } else if (v1.type == VarType.FLOAT && v2.type == VarType.REAL) {
+            LLVMGenerator.dobtoflo(v2.name);;
+            v2.name = "%" + (LLVMGenerator.reg - 1);
+            LLVMGenerator.div_float(v1.name, v2.name);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.FLOAT, 0));
+        } else if (v1.type == VarType.REAL && v2.type == VarType.FLOAT) {
+            LLVMGenerator.flotodob(v2.name);;
+            v2.name = "%" + (LLVMGenerator.reg - 1);
+            LLVMGenerator.div_double(v1.name, v2.name);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL, 0));
+        }else {
             error(ctx.getStart().getLine(), "division type mismatch");
         }
 
@@ -243,22 +315,45 @@ public class LLVMActions extends gramBaseListener {
     @Override
     public void exitToint(gramParser.TointContext ctx) {
         Value v = stack.pop();
-        LLVMGenerator.fptosi(v.name);
-        stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT, 0));
+        if (v.type == VarType.REAL){
+            LLVMGenerator.fptosi(v.name);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT, 0));
+        }else if (v.type == VarType.FLOAT){
+            LLVMGenerator.float_to_int(v.name);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT, 0));
+
+        }else{
+            System.err.println("To int type mismatch" + v.type);
+        }
     }
 
     @Override
     public void exitToreal(gramParser.TorealContext ctx) {
         Value v = stack.pop();
-        LLVMGenerator.sitofp(v.name);
-        stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL, 0));
+        if(v.type == VarType.INT){
+            LLVMGenerator.sitofp(v.name);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL, 0));
+        } else if (v.type == VarType.FLOAT){
+            LLVMGenerator.flotodob(v.name);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL, 0));
+        }else{
+            System.err.println("To real type mismatch" + v.type);
+        }
     }
 
     @Override
     public void exitTofloat(gramParser.TofloatContext ctx) {
         Value v = stack.pop();
-        LLVMGenerator.dobtoflo(v.name);
-        stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL, 0));
+        if (v.type == VarType.REAL){
+            LLVMGenerator.dobtoflo(v.name);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.FLOAT, 0));
+        } else if (v.type == VarType.INT){
+            LLVMGenerator.int_to_float(v.name);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.FLOAT, 0));
+        }else{
+            System.err.println("To float type mismatch" + v.type);
+        }
+        
     }
 
     @Override
@@ -325,6 +420,9 @@ public class LLVMActions extends gramBaseListener {
             }
             if (v.type == VarType.ARRAY_i32) {
                 LLVMGenerator.printf_arrayi32(ID);
+            }
+            if (v.type == VarType.FLOAT) {
+                LLVMGenerator.printf_float(ID);
             }
         } else {
             error(ctx.getStart().getLine(), "unknown variable type" + ID);

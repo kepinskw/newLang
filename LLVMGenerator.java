@@ -33,6 +33,15 @@ class LLVMGenerator {
         reg++;
     }
 
+    static void printf_float(String id) {
+         main_text += "%" + reg + " = load float, float* %" + id + "\n";
+         reg++;
+         main_text += "%" + reg + "= fpext float %" + (reg-1) + " to double \n";
+         reg++;
+         main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strpd, i32 0, i32 0), double %" + (reg - 1) + ")\n";
+         reg++;
+  }
+
     static void printf_string(String id) {
         main_text += "%" + reg + " = load i8*, i8** %" + id + "\n";
         reg++;
@@ -90,6 +99,10 @@ class LLVMGenerator {
     static void declare_double(String id) {
         main_text += "%" + id + " = alloca double\n";
     }
+    
+    static void declare_float(String id) {
+      main_text += "%" + id + " = alloca float\n";
+  }
 
     static void declare_array_i32(String id, int size) {
         main_text += "%" + id + " = alloca [" + (size+1) + " x i32]\n";
@@ -131,6 +144,10 @@ class LLVMGenerator {
     static void assign_double(String id, String value) {
         main_text += "store double " + value + ", double* %" + id + "\n";
     }
+    
+    static void assign_float(String id, String value) {
+      main_text += "store float " + value + ", float* %" + id + "\n";
+  }
 
     static void assign_string(String id) {
         main_text += "store i8* %" + (reg - 1) + ", i8** %" + id + "\n";
@@ -161,6 +178,11 @@ class LLVMGenerator {
         reg++;
     }
 
+    static void load_float(String id) {
+      main_text += "%" + reg + " = load float, float* %" + id + "\n";
+      reg++;
+  }
+
     static void load_string(String id) {
         main_text += "%" + reg + " = load i8*, i8** %" + id + "\n";
         reg++;
@@ -180,6 +202,11 @@ class LLVMGenerator {
         main_text += "%" + reg + " = fadd double " + val1 + ", " + val2 + "\n";
         reg++;
     }
+    
+    static void add_float(String val1, String val2) {
+      main_text += "%" + reg + " = fadd float " + val1 + ", " + val2 + "\n";
+      reg++;
+  }
 
     static void add_string(String id1, int l1, String id2, int l2) {
         allocate_string("str" + str, l1 + l2);
@@ -206,6 +233,11 @@ class LLVMGenerator {
         reg++;
     }
 
+    static void neg_float(String val2) {
+      main_text += "%" + reg + " = fsub float " + -0.0 + ", " + val2 + "\n";
+      reg++;
+  }
+
     static void sub_i32(String val2, String val1) {
         main_text += "%" + reg + " = sub i32 " + val1 + ", " + val2 + "\n";
         reg++;
@@ -215,6 +247,11 @@ class LLVMGenerator {
         main_text += "%" + reg + " = fsub double " + val1 + ", " + val2 + "\n";
         reg++;
     }
+
+    static void sub_float(String val1, String val2) {
+      main_text += "%" + reg + " = fsub float " + val1 + ", " + val2 + "\n";
+      reg++;
+  }
 
     static void mult_i32(String val1, String val2) {
         main_text += "%" + reg + " = mul i32 " + val1 + ", " + val2 + "\n";
@@ -226,6 +263,11 @@ class LLVMGenerator {
         reg++;
     }
 
+    static void mult_float(String val1, String val2) {
+      main_text += "%" + reg + " = fmul float " + val1 + "," + val2 + "\n";
+      reg++;
+  }
+
     static void div_i32(String val1, String val2) {
         main_text += "%" + reg + " = sdiv i32 " + val1 + ", " + val2 + "\n";
         reg++;
@@ -235,6 +277,11 @@ class LLVMGenerator {
         main_text += "%" + reg + " = fdiv double " + val1 + ", " + val2 + "\n";
         reg++;
     }
+
+    static void div_float(String val1, String val2) {
+      main_text += "%" + reg + " = fdiv float " + val1 + ", " + val2 + "\n";
+      reg++;
+  }
 
     static void log_and(String val1, String val2) {
         main_text += "%" + reg + " = and i1 " + val1 + ", " + val2 + "\n";
@@ -267,14 +314,26 @@ class LLVMGenerator {
     }
     
     static void dobtoflo(String id) {
-      main_text += "%" + reg + " = call i16 @llvm.convert.to.fp16.f64(double %"+ id +")\n";
-      main_text += "store i16 %"+ reg +", i16* @x";
+      main_text += "%" + reg + "= fptrunc double " + id +" to float \n";
+      // main_text += "%" + reg + " = call i16 @llvm.convert.to.fp16.f64(double "+ id +")\n";
+      // main_text += "store i16 %"+ reg +", i16* @x";
       reg++;
     }
 
     static void flotodob(String id) {
-      main_text += "%" + reg + " = fptosi double " + id + " to i32\n";
+      main_text += "%" + reg + "= fpext float " + id + " to double \n";
+      // main_text += "%" + reg + " = call double @llvm.convert.from.fp16(i16" + id + " )\n";
       reg++;
+    }
+
+    static void float_to_int (String id){
+      main_text += "%" + reg + "= fptosi float " + id + " to i32 \n";
+      reg ++;
+    }
+
+    static void int_to_float (String id){
+      main_text += "%" + reg + "= sitofp i32 " + id + " to float \n";
+      reg ++;
     }
 
     static void int_to_string(String in, int lout) {
@@ -298,6 +357,7 @@ class LLVMGenerator {
     static String generate() {
         String text = "";
         text += "declare i32 @printf(i8*, ...)\n";
+        text += "declare double @llvm.convert.from.fp16.f64(i16 %a)\n";
         text += "declare i16 @llvm.convert.to.fp16.f64(double %a)\n";
         text += "declare i32 @sprintf(i8*, i8*, ...)\n";
         text += "declare i8* @strcpy(i8*, i8*)\n";
@@ -311,6 +371,7 @@ class LLVMGenerator {
         text += "@strs = constant [3 x i8] c\"%d\\00\"\n";
         text += "@strs2 = constant [5 x i8] c\"%10s\\00\"\n";
         text += "@strspi = constant [3 x i8] c\"%d\\00\"\n";
+        text += "@strfloat = constant [4 x i8] c\"%f\\0A\\00\"\n";
         text += "@.strDouble = private constant [4 x i8] c\"%lf\00\"\n";
         text += "@strps = constant [4 x i8] c\"%s\\0A\\00\"\n";
         text += "@.bool_str = private constant [3 x i8] c\"%d\00\"\n";

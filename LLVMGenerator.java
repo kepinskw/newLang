@@ -7,6 +7,7 @@ class LLVMGenerator {
 
     static String header_text = "";
     static String main_text = "";
+    static String buffer = "";
     static int reg = 1;
     static int str = 1;
     static int br = 0;
@@ -504,6 +505,10 @@ class LLVMGenerator {
       int b = brstack.pop();
       main_text += "br label %cond"+b+"\n";
       main_text += "false"+b+":\n";
+    }
+
+    static void close_main(){
+      main_text += buffer;
     }
 
 

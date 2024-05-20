@@ -29,12 +29,21 @@ class Value {
 public class LLVMActions extends gramBaseListener {
 
     HashMap<String, Value> variables = new HashMap<String, Value>();
+    HashSet<String> functions = new HashSet<String>();
+    HashSet<String> localnames = new HashSet<String>();
     Stack<Value> stack = new Stack<Value>();
+    Boolean global;
      
     static int BUFFER_SIZE = 16;
 
     @Override
+    public void enterProg(gramParser.ProgContext ctx){
+        global = true;
+    }
+
+    @Override
     public void exitProg(gramParser.ProgContext ctx) {
+        LLVMGenerator.close_main();
         System.out.println(LLVMGenerator.generate());
     }
 

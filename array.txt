@@ -1,0 +1,47 @@
+a{2} = [1,2]
+b{4} = [0,3,1,7]
+
+print a
+print b
+
+c = a[0]
+d = b[2]
+print c
+print d
+
+e = c + d
+print e
+
+b[2] = 912
+print b
+print d
+f = b[2]
+print f
+
+a = [16,78]
+print a
+print a[0]
+
+a1{2} = [1.324,2.12]
+b1{4} = [0.0190,3.5432,1.784,7.0293]
+
+print a1
+print b1
+
+c1 = a1[0]
+d1 = b1[2]
+print c1
+print d1
+
+e1 = c1 + d1
+print e1
+
+b1[2] = 912.3242
+print b1
+print d1
+f1 = b1[2]
+print f1
+
+a1 = [16.231,78.0932]
+print a1
+print a1[0]

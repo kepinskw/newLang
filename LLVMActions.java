@@ -2,17 +2,26 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-enum VarType {INT, REAL, FLOAT, STRING, ARRAY_i32,ARRAY_i32_ELEM, ARRAY_DOUBLE, BOOL, UNKNOWN}
+enum VarType {INT, REAL, FLOAT, STRING, ARRAY_i32,ARRAY_i32_ELEM,MATRIX_DOUBLE,MATRIX_I32, ARRAY_DOUBLE, BOOL, UNKNOWN}
 
 class Value {
     public String name;
     public VarType type;
     public int length;
+    public int  length1;
+
+    public Value(String name, VarType type, int length,int length1) {
+        this.name = name;
+        this.type = type;
+        this.length = length;
+        this.length1 = length1;
+    }
 
     public Value(String name, VarType type, int length) {
         this.name = name;
         this.type = type;
         this.length = length;
+        this.length1 = 0;
     }
 }
 
@@ -95,21 +104,47 @@ public class LLVMActions extends gramBaseListener {
     }
 
     @Override
+    public void exitAssignArrayElem(gramParser.AssignArrayElemContext ctx){
+        String ID = ctx.ID().getText();
+        String INT = ctx.INT().getText();
+        System.err.println("EXIT ARRAY ELEMENT   : " + ID);
+        if(!variables.containsKey(ID)){
+            error(ctx.getStart().getLine(), "Vector " + ID + "does not exist");
+        }
+        Value array = variables.get(ID);
+        if(Integer.parseInt(INT) >= array.length){
+            error(ctx.getStart().getLine(), "Referenced outside vector");
+        }
+        Value value = stack.pop();
+        LLVMGenerator.assign_array_i32_element(ID,Integer.parseInt(value.name),array.length,Integer.parseInt(INT));
+    }
+
+    @Override
     public void exitAssignArray(gramParser.AssignArrayContext ctx) {
         String ID = ctx.ID().getText();
+        Integer len = 0;
         if(ctx.INT() == null){
-            error(ctx.getStart().getLine(), "Cannot assign befor initalization");
+            if(variables.containsKey(ID)){
+                Value dest = variables.get(ID);
+                len = variables.get(ID).length;
+            }else{
+                error(ctx.getStart().getLine(), "Cannot assign befor initalization");
+            }
+
+        }else{
+             len = Integer.parseInt(ctx.INT().getText());
         }
-        String len = ctx.INT().getText();
         System.err.println("len: " + len);
         Value v = stack.pop();
-        if (Integer.parseInt(len) == v.length) {
+        if (len == v.length) {
             if (v.type == VarType.ARRAY_i32) {
                 System.err.println("name: " + ID);
                 System.err.println("len: " + len);
                 System.err.println("v: " + v.name);
                 if (!variables.containsKey(ID)) {
                     LLVMGenerator.declare_array_i32(ID, v.length);
+                    System.err.println("array declaration   : " + ID);
+
                 }
                 String[] content = v.name.substring(1, v.name.length() - 1).split(",");
                 List<String> contentList = Arrays.asList(content);
@@ -137,12 +172,19 @@ public class LLVMActions extends gramBaseListener {
     }
 
     @Override
+    public void exitAssignMatrix(gramParser.AssignMatrixContext ctx){
+        String ID = ctx.ID().getText();
+        String INT = ctx.INT(0).getText();
+        error(ctx.getStart().getLine(), "matrix id " + INT);
+    }
+
+    @Override
     public void exitArrayLetter(gramParser.ArrayLetterContext ctx){
         String ID = ctx.ID().getText();
         String textInt = ctx.INT().getText();
         //Integer INT = Integer.parseInt(textInt);
         Value array = variables.get(ID);
-        if(Integer.parseInt(textInt) <= array.length){
+        if(Integer.parseInt(textInt) < array.length){
             stack.push(new Value(textInt, VarType.INT, 1));
             stack.push(new Value(ID, array.type, array.length));
         }else{
@@ -206,6 +248,19 @@ public class LLVMActions extends gramBaseListener {
         String[] content = tmp.substring(1, tmp.length() - 1).split(",");
         System.err.println(tmp);
         Value v = new Value(tmp, VarType.ARRAY_DOUBLE, content.length);
+        stack.push(v);
+    }
+
+    @Override
+    public void exitIntMatrix(gramParser.IntMatrixContext ctx){
+        String tmp = ctx.getText();
+        System.err.println(tmp);
+        String[] rows = tmp.substring(1, tmp.length() - 1).split(";");
+        System.err.println(rows[0]);
+        String[] array = rows[0].split(",");
+        System.err.println(rows[0]);
+        System.err.println(tmp);
+        Value v = new Value(tmp, VarType.MATRIX_I32, rows.length, array.length);
         stack.push(v);
     }
 
@@ -377,6 +432,12 @@ public class LLVMActions extends gramBaseListener {
             }
             if (v.type == VarType.BOOL) {
                 LLVMGenerator.printf_bool(ID);
+            }
+            if (v.type == VarType.ARRAY_i32){
+                LLVMGenerator.printf_array_i32(ID,v.length);
+            }
+            if (v.type == VarType.ARRAY_DOUBLE){
+                LLVMGenerator.printf_array_double(ID,v.length);
             }
         } else {
             error(ctx.getStart().getLine(), "unknown variable type " + ID);

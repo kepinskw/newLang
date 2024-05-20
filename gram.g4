@@ -4,13 +4,17 @@ prog: block EOF;
 
 block: (stat? NL)*;
 
-stat: PRINT letter #printLetter
-    | PRINT ID    #print
+stat: ID LSP INT RSP '=' value    #assignArrayElem
+    | PRINT printElem   #printSmth
     | ID '=' expr    #assign
     | (ID LFP INT RFP | ID) '=' array #assignArray
+    | (ID LFP INT RFP LFP INT RFP | ID) '=' matrix  #assignMatrix
     | READ ID        #read
     | func           #fun
     | cond           #codn;
+
+printElem: ID   #print
+    |   letter  #printLetter;
 
 expr: value         #exprValue
     | letter        #epxrLetter
@@ -75,6 +79,12 @@ value: STRING   #string
 array: LSP INT (COMA INT)* RSP      #intArray
     |  LSP REAL (COMA REAL)* RSP    #realArray;
 
+matrix: LSP matrixRowInt (SEMICOLON matrixRowInt) RSP   #intMatrix
+    | LSP matrixRowDouble (SEMICOLON matrixRowDouble) RSP   #doubleMatrix;
+
+matrixRowInt: (INT (COMA INT)*);
+
+matrixRowDouble: (REAL (COMA REAL)*);
 
 
 
@@ -113,6 +123,7 @@ RSP: ']'  ;
 COMA:','  ;
 RFP: '}'  ;
 LFP: '{'  ;
+SEMICOLON: ';';
 
 
 REAL: ([1-9]([0-9]|[0])*) + '.' + [0-9]+ ;

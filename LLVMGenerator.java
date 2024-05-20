@@ -51,6 +51,25 @@ class LLVMGenerator {
         reg++;
     }
 
+    static void printf_array_i32(String id, Integer size) {
+        for (int i = 0; i < size; i++) {
+            main_text += "%" + reg + " = getelementptr inbounds [" + size + " x i32], [" + size + " x i32]* %" + id + ", i32 0, i32 " + i + "\n";
+            reg++;
+            // Załaduj wartość elementu z obliczonego adresu
+            main_text += "%" + reg + " = load i32, i32* %" + (reg - 1) + "\n";
+            reg++;
+            String formatStr = "[4 x i8], [4 x i8]* @str_format";
+            if (i == 0) {
+                formatStr = "[5 x i8], [5 x i8]* @str_first_format";
+            } else if (i == size - 1) {
+                formatStr = "[5 x i8], [5 x i8]* @str_last_format";
+            }
+            // Wywołaj funkcję printf, aby wydrukować wartość elementu
+            main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds (" + formatStr + ", i32 0, i32 0), i32 %" + (reg - 1) + ")\n";
+            reg++;
+        }
+    }
+
     static void printf_array_double_element(String id, Integer size, Integer position) {
         main_text += "%" + reg + " = getelementptr inbounds [" + size + " x double], [" + size + " x double]* %" + id + ", i32 0, i32 " + position + "\n";
         reg++;
@@ -61,6 +80,29 @@ class LLVMGenerator {
         main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strpd, i32 0, i32 0), double %" + (reg - 1) + ")\n";
         reg++;
     }
+
+    static void printf_array_double(String id, Integer size) {
+        for (int i = 0; i < size; i++) {
+            main_text += "%" + reg + " = getelementptr inbounds [" + size + " x double], [" + size + " x double]* %" + id + ", i32 0, i32 " + i + "\n";
+            reg++;
+            // Załaduj wartość elementu z obliczonego adresu
+            main_text += "%" + reg + " = load double, double* %" + (reg - 1) + "\n";
+            reg++;
+            String formatStr = "[4 x i8], [4 x i8]* @str_format_double";
+            if (i == 0) {
+                formatStr = "[5 x i8], [5 x i8]* @str_first_format_double";
+            } else if (i == size - 1) {
+                formatStr = "[5 x i8], [5 x i8]* @str_last_format_double";
+            }
+            // Wywołaj funkcję printf, aby wydrukować wartość elementu
+            main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds (" + formatStr + ", i32 0, i32 0), double %" + (reg - 1) + ")\n";
+            reg++;
+
+            //main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strpd, i32 0, i32 0), double %" + (reg - 1) + ")\n";
+
+        }
+    }
+
 
     static void scanf_i32(String id) {
         main_text += "%" + reg + " = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strs, i32 0, i32 0), i32* %" + id + ")\n";
@@ -126,7 +168,7 @@ class LLVMGenerator {
         main_text += "store i32 " + value + ", i32* %" + id + "\n";
     }
 
-    static void assign_i32_from_array(String array_id,String destination_id, Integer size,Integer position) {
+    static void assign_i32_from_array(String array_id, String destination_id, Integer size, Integer position) {
         main_text += "%" + reg + " = getelementptr inbounds [" + size + " x i32], [" + size + " x i32]* %" + array_id + ", i32 0, i32 " + position + "\n";
         reg++;
         // Załaduj wartość elementu z obliczonego adresu
@@ -140,25 +182,36 @@ class LLVMGenerator {
 
         for (int i = 0; i < values.size(); i++) {
             // Obliczanie adresu elementu wektora
-            String elementPtr = "%" + id + "_elem_" + i;
-            main_text += elementPtr + " = getelementptr inbounds [" + values.size() + " x i32], [" + values.size() + " x i32]* %" + id + ", i32 0, i32 " + i + "\n";
+            //String elementPtr = "%" + id + "_elem_" + i;
+            main_text += "%" + reg + " = getelementptr inbounds [" + values.size() + " x i32], [" + values.size() + " x i32]* %" + id + ", i32 0, i32 " + i + "\n";
             // Generowanie kodu do przypisania wartości do odpowiednich indeksów wektora
-            main_text += "store i32 " + values.get(i) + ", i32* " + elementPtr + "\n";
+            main_text += "store i32 " + values.get(i) + ", i32* %" + (reg) + "\n";
+            reg++;
         }
+    }
+
+    static void assign_array_i32_element(String id, Integer value, Integer size, Integer position) {
+        // Obliczanie adresu elementu wektora
+        //String elementPtr = "%" + id + "_elem_" + i;
+        main_text += "%" + reg + " = getelementptr inbounds [" + size + " x i32], [" + size + " x i32]* %" + id + ", i32 0, i32 " + position + "\n";
+        // Generowanie kodu do przypisania wartości do odpowiednich indeksów wektora
+        main_text += "store i32 " + value + ", i32* %" + (reg) + "\n";
+        reg++;
     }
 
     static void assign_array_double(String id, List<String> values) {
 
         for (int i = 0; i < values.size(); i++) {
             // Obliczanie adresu elementu wektora
-            String elementPtr = "%" + id + "_elem_" + i;
-            main_text += elementPtr + " = getelementptr inbounds [" + values.size() + " x double], [" + values.size() + " x double]* %" + id + ", i32 0, i32 " + i + "\n";
+            //String elementPtr = "%" + id + "_elem_" + i;
+            main_text += "%" + reg + " = getelementptr inbounds [" + values.size() + " x double], [" + values.size() + " x double]* %" + id + ", i32 0, i32 " + i + "\n";
             // Generowanie kodu do przypisania wartości do odpowiednich indeksów wektora
-            main_text += "store double " + values.get(i) + ", double* " + elementPtr + "\n";
+            main_text += "store double " + values.get(i) + ", double* %" + reg + "\n";
+            reg++;
         }
     }
 
-    static void assign_double_from_array(String array_id,String destination_id, Integer size,Integer position) {
+    static void assign_double_from_array(String array_id, String destination_id, Integer size, Integer position) {
         main_text += "%" + reg + " = getelementptr inbounds [" + size + " x double], [" + size + " x double]* %" + array_id + ", i32 0, i32 " + position + "\n";
         reg++;
         // Załaduj wartość elementu z obliczonego adresu
@@ -356,6 +409,12 @@ class LLVMGenerator {
         text += "@strs = constant [3 x i8] c\"%d\\00\"\n";
         text += "@strs2 = constant [5 x i8] c\"%10s\\00\"\n";
         text += "@strspi = constant [3 x i8] c\"%d\\00\"\n";
+        text += "@str_first_format =  constant [5 x i8] c\"[%d,\\00\"\n";
+        text += "@str_format =  constant [4 x i8] c\"%d,\\00\"\n";
+        text += "@str_last_format =  constant [5 x i8] c\"%d]\\0A\\00\"\n";
+        text += "@str_first_format_double =  constant [5 x i8] c\"[%f,\\00\"\n";
+        text += "@str_format_double =  constant [4 x i8] c\"%f,\\00\"\n";
+        text += "@str_last_format_double =  constant [5 x i8] c\"%f]\\0A\\00\"\n";
         text += "@.strDouble = private constant [4 x i8] c\"%lf\00\"\n";
         text += "@strps = constant [4 x i8] c\"%s\\0A\\00\"\n";
         text += "@true_str = private constant [6 x i8] c\"true\\0A\\00\"\n";

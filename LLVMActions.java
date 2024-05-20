@@ -30,7 +30,7 @@ public class LLVMActions extends gramBaseListener {
 
     HashMap<String, Value> variables = new HashMap<String, Value>();
     Stack<Value> stack = new Stack<Value>();
-
+     
     static int BUFFER_SIZE = 16;
 
     @Override
@@ -546,6 +546,52 @@ public class LLVMActions extends gramBaseListener {
             }
         } else {
             error(ctx.getStart().getLine(), "unknown variable type " + ID);
+        }
+    }
+
+    @Override
+    public void enterBlockif(gramParser.BlockifContext ctx){
+        LLVMGenerator.ifstart();
+    }
+
+    @Override
+    public void exitBlockif(gramParser.BlockifContext ctx){
+        LLVMGenerator.ifend();
+    }
+
+    @Override
+    public void exitCond(gramParser.CondContext ctx){
+        String ID = ctx.ID().getText();
+        String INT = ctx.INT().getText();
+        if(variables.containsKey(ID)){
+            LLVMGenerator.icmp(ID, INT);
+        }
+        else{
+            error(ctx.getStart().getLine(), "uknown variable: " + ID);
+        }
+    }
+
+    @Override
+    public void exitReps(gramParser.RepsContext ctx) { 
+        if(ctx.ID() != null){
+            String ID = ctx.ID().getText();
+            if(variables.containsKey(ID)){
+                LLVMGenerator.load_i32(ID);
+                LLVMGenerator.startloop("%"+(LLVMGenerator.reg-1));
+            }
+            else{
+                error(ctx.getStart().getLine(), "uknown variable: " + ID);
+            }
+        }else{
+        String INT = ctx.INT().getText();
+        LLVMGenerator.startloop(INT);
+        }
+    }
+
+    @Override
+    public void exitBlock(gramParser.BlockContext ctx){
+        if (ctx.getParent() instanceof gramParser.ForContext){
+            LLVMGenerator.endloop();
         }
     }
 

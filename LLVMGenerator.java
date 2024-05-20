@@ -1,6 +1,7 @@
 import org.stringtemplate.v4.ST;
 
 import java.util.List;
+import java.util.Stack;
 
 class LLVMGenerator {
 
@@ -8,6 +9,10 @@ class LLVMGenerator {
     static String main_text = "";
     static int reg = 1;
     static int str = 1;
+    static int br = 0;
+
+    static Stack<Integer> brstack = new Stack<Integer>();
+
 
     static void printf_i32(String id) {
         main_text += "%" + reg + " = load i32, i32* %" + id + "\n";
@@ -451,6 +456,56 @@ class LLVMGenerator {
         main_text += "%" + reg + " = call i32 @atoi(i8* " + in + ")\n";
         reg++;
     }
+
+
+    static void icmp(String id, String value){
+      main_text += "%"+reg+" = load i32, i32* %"+id+"\n";
+      reg++;
+      main_text += "%"+reg+" = icmp eq i32 %"+(reg-1)+", "+value+"\n";
+      reg++;
+    }
+
+    static void ifstart(){
+      br++;
+      main_text += "br i1 %"+(reg-1)+", label %true"+br+", label %false"+br+"\n";
+      main_text += "true"+br+":\n";
+      brstack.push(br);
+    }
+
+    static void ifend(){
+      int b = brstack.pop();
+      main_text += "br label %false"+b+"\n";
+      main_text += "false"+b+":\n";
+    }
+
+    static void startloop(String reps){
+      declare_i32(Integer.toString(reg));
+      int counter = reg;
+      reg++;
+      assign_i32(Integer.toString(counter), "0");
+      br++;
+
+      main_text += "br label %cond"+br+"\n";
+      main_text += "cond"+br+":\n";
+
+      load_i32(Integer.toString(counter));
+      add_i32("%"+(reg-1), "1");
+      assign_i32(Integer.toString(counter), "%"+(reg-1));
+
+      main_text += "%"+reg+" = icmp slt i32 %"+(reg-2)+", "+reps+"\n";
+      reg++;
+
+      main_text += "br i1 %"+(reg-1)+", label %true"+br+", label %false"+br+"\n";
+      main_text += "true"+br+":\n";
+      brstack.push(br);
+    }
+
+    static void endloop(){
+      int b = brstack.pop();
+      main_text += "br label %cond"+b+"\n";
+      main_text += "false"+b+":\n";
+    }
+
 
     static String generate() {
         String text = "";

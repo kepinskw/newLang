@@ -467,6 +467,11 @@ class LLVMGenerator {
         reg++;
     }
 
+    static void load_bool(String id){
+         main_text += "%" + reg + " = load i1, i1* %" + id + "\n";
+         reg++;
+    }
+
     static void string_pointer(String id, int l) {
         main_text += "%" + reg + " = getelementptr inbounds [" + (l + 1) + " x i8], [" + (l + 1) + " x i8]* %" + id + ", i64 0, i64 0\n";
         reg++;

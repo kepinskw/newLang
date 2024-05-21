@@ -1,0 +1,8 @@
+T = true
+F = false
+
+print T 
+print F 
+
+s1 = T and F    
+print s1

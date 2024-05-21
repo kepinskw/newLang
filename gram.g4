@@ -52,7 +52,8 @@ expr3: AND  (transBool | brackedBool)    #and
     |  OR  (transBool | brackedBool)     #or
     |  XOR  (transBool | brackedBool)    #xor;
 
-transBool: BOOL     #bool;
+transBool: ID   #bid 
+    |  BOOL     #bool;
 
 func: IF cond THEN blockif ENDIF  #if
     | FOR reps block ENDFOR       #for 
@@ -75,7 +76,6 @@ value: STRING   #string
     |  REAL     #real
     |  INT      #int
     |  ID       #vid;
-
 
 array: LSP INT (COMA INT)* RSP      #intArray
     |  LSP REAL (COMA REAL)* RSP    #realArray;

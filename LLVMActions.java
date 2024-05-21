@@ -643,6 +643,22 @@ public class LLVMActions extends gramBaseListener {
         stack.push(new Value(ctx.BOOL().getText(), VarType.BOOL, 0));
     }
 
+    @Override 
+    public void exitBid(gramParser.BidContext ctx) {
+        String ID = ctx.ID().getText();
+        if (variables.containsKey(ID)) {
+            Value v = variables.get(ID);
+            System.err.println("Current push: " + ID);
+            if (v.type == VarType.BOOL) {
+                LLVMGenerator.load_bool(ID);
+            }
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.BOOL, 0));
+        } else {
+            error(ctx.getStart().getLine(), "unknown variable " + ID);
+        }
+     }
+
+
     @Override
     public void exitAnd(gramParser.AndContext ctx) {
         System.err.println("AND: ");

@@ -21,6 +21,14 @@ test_arrays:
 	java -cp $(ANTLR):output:. Main array.txt > input.ll
 	lli input.ll
 
+test_strings:
+	java -cp $(ANTLR):output:. Main string.txt > input.ll
+	lli input.ll
+
+test_bool:
+	java -cp $(ANTLR):output:. Main bool.txt > input.ll
+	lli input.ll
+
 test:
 	java -cp $(ANTLR):output:. Main test.txt > input.ll
 	lli input.ll

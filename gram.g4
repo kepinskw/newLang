@@ -18,7 +18,7 @@ printElem: ID   #print
 
 expr: value         #exprValue
     | letter        #epxrLetter
-    |simpleExpr    #exprSimple
+    | simpleExpr    #exprSimple
     | first+        #exprEq
     | boolexpr2      #exprBool;
 
@@ -64,7 +64,7 @@ cond: ID '==' INT;
 
 letter: ID LSP INT RSP   #arrayLetter
     | ID LSP INT RSP LSP INT RSP    #matrixLetter
-    | ID LSP INT ':' INT RSP #arrayRange;
+    | ID LSP RSP LSP INT RSP #matrixColumn;
 
 reps: ID
     | INT;
@@ -127,7 +127,7 @@ LFP: '{'  ;
 SEMICOLON: ';';
 
 
-REAL: ([1-9]([0-9]|[0])*) + '.' + [0-9]+ ;
+REAL: (([1-9]([0-9]|[0])*) | [0]) + '.' + [0-9]+ ;
 INT: [1-9][0-9]* | [0];
 STRING: '"'[a-zA-Z0-9]*'"';
 ID: [a-zA-Z][a-zA-Z0-9]* ;

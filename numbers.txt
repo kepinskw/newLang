@@ -148,6 +148,6 @@ r1 = 0
 read r1
 print r1
 
-r1 = 0.0
-read r1
-print r1
+r2 = 0.0
+read r2
+print r2

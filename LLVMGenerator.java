@@ -194,8 +194,17 @@ class LLVMGenerator {
     }
 
     static void scanf_bool(String id) {
-        main_text += "%" + reg + " = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strs, i32 0, i32 0), i1* %" + id + ")\n";
-        reg++;
+        
+      //   main_text += "%" + reg + " = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strs, i32 0, i32 0), i1* %" + id + ")\n";
+      //   reg++;
+      main_text += "%" + reg + " = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @boolStr, i32 0, i32 0), i8* getelementptr inbounds ([7 x i8], [7 x i8]* @inputBuffer, i32 0, i32 0))\n";
+      reg++;
+      main_text += "%" + reg + " = call i32 @strcmp(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @inputBuffer, i32 0, i32 0), i8* getelementptr inbounds ([5 x i8], [5 x i8]* @true_str2, i32 0, i32 0))\n";
+      reg++;
+      main_text += "%" + reg + " = icmp eq i32 0, %" + (reg - 1) + "\n";
+      reg++;
+      main_text += "store i1 %" + (reg - 1) + ", i1* %" + id + "\n";
+
     }
 
     static void allocate_string(String id, int l) {
@@ -700,6 +709,7 @@ class LLVMGenerator {
         text += "declare i32 @sprintf(i8*, i8*, ...)\n";
         text += "declare i8* @strcpy(i8*, i8*)\n";
         text += "declare i8* @strcat(i8*, i8*)\n";
+        text += "declare i32 @strcmp(i8*, i8*)\n";
         text += "declare i32 @atoi(i8*)\n";
         text += "declare i32 @__isoc99_scanf(i8*, ...)\n";
         text += "declare double @double_scanf(i8*, ...)\n";
@@ -723,6 +733,9 @@ class LLVMGenerator {
         text += "@false_str = private constant [7 x i8] c\"false\\0A\\00\"\n";
         text += "@.bool_fmt = private constant [3 x i8] c\"%s\00\"\n";
         text += "@.str = private unnamed_addr constant [3 x i8] c\"%f\00\"\n";
+        text += "@inputBuffer = common global [7 x i8] zeroinitializer\n";
+        text += "@boolStr = constant [5 x i8] c\"%6s\\00\\00\"\n";
+        text += "@true_str2 = constant [5 x i8] c\"true\\00\"\n";
         text += header_text;
         text += "define i32 @main() nounwind{\n";
         text += main_text;

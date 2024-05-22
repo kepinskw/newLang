@@ -18,20 +18,20 @@
     * print number              +
     * print column              +
     * print row                 +
-	* insert from number
-    * insert from array
+	* insert from number          +
+    * insert from array         +
     * select to number          +
     * select to array           +
-    * assign undeclared
-    * assign declared
+    * assign undeclared         +
+    * assign declared           +
   ### BOOL
-    * XOR
-    * NOR
-    * AND
-    * OR
-    * print
-    * read
-    * brackets
+    * XOR                       +
+    * NOR                       +
+    * AND                       +
+    * OR                        +
+    * print                     +
+    * read                      +
+    * brackets                  +
   ### STRING
     * read                      +
     * print                     +

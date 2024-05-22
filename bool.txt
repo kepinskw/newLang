@@ -91,3 +91,9 @@ print f
 print s6
 print x
 
+read s6
+print s6
+print x
+
+read s6
+print s6

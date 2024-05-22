@@ -689,10 +689,9 @@ public class LLVMActions extends gramBaseListener {
         stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.BOOL, 0));
     }
 
-    @Override
-    public void exitNeg(gramParser.NegContext ctx) {
+	@Override public void exitNega(gramParser.NegaContext ctx) { 
         Value v1 = stack.pop();
-
+        
         LLVMGenerator.log_neg(v1.name);
         stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.BOOL, 0));
     }

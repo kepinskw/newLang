@@ -45,15 +45,16 @@ boolexpr2:   brackedBool expr3*
     |       brackedBool;
 
 brackedBool: LP transBool expr3+ RP  #boolExprExtended
-    |       LP transBool RP          #boolExpr
-    |   transBool                    #trsBool;
+    |        LP transBool RP          #boolExpr
+    |        transBool                    #trsBool;
 
 expr3: AND  (transBool | brackedBool)    #and
     |  OR  (transBool | brackedBool)     #or
     |  XOR  (transBool | brackedBool)    #xor;
 
 transBool: ID   #bid 
-    |  BOOL     #bool;
+    |  BOOL     #bool
+    |        NEG transBool                 #nega;
 
 func: IF cond THEN blockif ENDIF  #if
     | FOR reps block ENDFOR       #for 

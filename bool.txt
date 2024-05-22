@@ -1,8 +1,93 @@
+x = "xxxxxxxxxxxx"
+
 T = true
 F = false
 
 print T 
 print F 
 
-s1 = T and F    
+print x
+f = "TandF"
+s1 = T and F
+print f    
 print s1
+print x
+
+f = "TandT"
+s2 = T and T
+print f 
+print s2
+print x
+
+f = "FandF"
+s3 = F and F
+print f 
+print s3
+print x
+
+f = "TorT"
+s4 = T or T
+print f 
+print s4
+print x
+
+f = "TorF"
+s5 = T or F
+print f 
+print s5
+print x
+
+f = "ForF"
+s6 = F or F
+print f 
+print s6
+print x
+
+f = "FxorF"
+s6 = F xor F
+print f 
+print s6
+print x
+
+f = "TxorF"
+s6 = T xor F
+print f 
+print s6
+print x
+
+f = "TxorT"
+s6 = T xor T
+print f 
+print s6
+print x
+
+f = "negT"
+s6 = neg T
+print f 
+print s6
+print x
+
+f = "ForNegF"
+s6 =  F or neg F
+print f 
+print s6
+print x
+
+f = "negTorNegT"
+s6 =  neg T or neg T
+print f 
+print s6
+print x
+
+f = "nTornTandForF"
+s6 =  (neg T or neg T) and (F or F)
+print f 
+print s6
+print x
+
+f = "nTornTandForFandTorT"
+s6 =  (neg T or neg T) and (F or F and (T or T))
+print f 
+print s6
+print x
+

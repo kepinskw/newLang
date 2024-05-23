@@ -18,7 +18,7 @@
     * print number              +
     * print column              +
     * print row                 +
-	* insert from number          +
+    * insert from number        +
     * insert from array         +
     * select to number          +
     * select to array           +

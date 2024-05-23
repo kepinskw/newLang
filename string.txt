@@ -10,5 +10,8 @@ str = "10"
 e = num + str
 print e
 
+asd= a + b
+print asd
+
 read a
 print a

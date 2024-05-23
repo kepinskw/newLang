@@ -76,7 +76,8 @@ fpar: ID;
 value: STRING   #string
     |  REAL     #real
     |  INT      #int
-    |  ID       #vid;
+    |  ID       #vid
+    |  letter   #let;
 
 array: LSP INT (COMA INT)* RSP      #intArray
     |  LSP REAL (COMA REAL)* RSP    #realArray;

@@ -141,8 +141,8 @@ print ai
 
 ari = (int) ar
 air = (real) ai
-print ar
-print ai
+print ari
+print air
 
 r1 = 0
 read r1

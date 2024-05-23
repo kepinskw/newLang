@@ -391,6 +391,26 @@ class LLVMGenerator {
         reg++;
     }
 
+    static void assign_matrix_i32_element_from_array(String id, String value, int valueId, int arraySize, int rowSize, int colSize, int rowId, int colId) {
+        // Obliczenie pozycji elementu w macierzy
+        int position = rowId * colSize + colId;
+
+        // Obliczanie adresu elementu macierzy
+        main_text += "%" + reg + " = getelementptr inbounds [" + rowSize + " x [" + colSize + " x i32]], [" + rowSize + " x [" + colSize + " x i32]]* %" + id + ", i32 0, i32 " + rowId + ", i32 " + colId + "\n";
+        reg++;
+
+        // Obliczanie adresu elementu wektora
+        main_text += "%" + reg + " = getelementptr inbounds [" + arraySize + " x i32], [" + arraySize + " x i32]* %" + value + ", i32 0, i32 " + valueId + "\n";
+        reg++;
+
+        // Ładowanie wartości z wektora
+        main_text += "%" + reg + " = load i32, i32* %" + (reg-1) + "\n";
+        reg++;
+
+        // Przypisanie wartości do odpowiedniego elementu macierzy
+        main_text += "store i32 %" + (reg-1) + ", i32* %" + (reg-3) + "\n";
+    }
+
     static void assign_array_double(String id, List<String> values) {
 
         for (int i = 0; i < values.size(); i++) {

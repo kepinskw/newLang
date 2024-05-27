@@ -1,22 +1,14 @@
-
-
-fun a
-a=1
-endfun
-
-
+a = 3
 print a
-
 
 d = 2
 e = a + d
 print e
 
-for 10
+for d
 print a
 endfor
 
-if a == 1
-print c
+if a == 3 then
+print d
 endif
-

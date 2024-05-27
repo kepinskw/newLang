@@ -88,9 +88,7 @@ class LLVMGenerator {
             main_text += "%" + reg + " = getelementptr inbounds [" + rows + " x [" + columns + " x i32]], [" + rows + " x [" + columns + " x i32]]* %" + id + ", i32 0, i32 " + rowId + ", i32 " + i + "\n";
             reg++;
             // Załaduj wartość elementu z obliczonego adresu
-
             printf_array(i, columns);
-
         }
     }
 
@@ -100,10 +98,7 @@ class LLVMGenerator {
             main_text += "%" + reg + " = getelementptr inbounds [" + rows + " x [" + columns + " x i32]], [" + rows + " x [" + columns + " x i32]]* %" + id + ", i32 0, i32 " + i + ", i32 " + columnId + "\n";
             reg++;
             // Załaduj wartość elementu z obliczonego adresu
-
             printf_array(i, rows);
-
-
         }
     }
 
@@ -114,13 +109,11 @@ class LLVMGenerator {
             main_text += "%" + reg + " = getelementptr inbounds [" + size + " x i32], [" + size + " x i32]* %" + id + ", i32 0, i32 " + i + "\n";
             reg++;
             // Załaduj wartość elementu z obliczonego adresu
-
             printf_array(i, size);
         }
     }
 
     static void printf_array(int i, int size) {
-
         System.err.println("print array i: " + i);
         main_text += "%" + reg + " = load i32, i32* %" + (reg - 1) + "\n";
         reg++;
@@ -201,17 +194,8 @@ class LLVMGenerator {
     }
 
     static void scanf_bool(String id) {
-        
-      //   main_text += "%" + reg + " = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strs, i32 0, i32 0), i1* %" + id + ")\n";
-      //   reg++;
-      main_text += "%" + reg + " = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @boolStr, i32 0, i32 0), i8* getelementptr inbounds ([7 x i8], [7 x i8]* @inputBuffer, i32 0, i32 0))\n";
-      reg++;
-      main_text += "%" + reg + " = call i32 @strcmp(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @inputBuffer, i32 0, i32 0), i8* getelementptr inbounds ([5 x i8], [5 x i8]* @true_str2, i32 0, i32 0))\n";
-      reg++;
-      main_text += "%" + reg + " = icmp eq i32 0, %" + (reg - 1) + "\n";
-      reg++;
-      main_text += "store i1 %" + (reg - 1) + ", i1* %" + id + "\n";
-
+        main_text += "%" + reg + " = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strs, i32 0, i32 0), i1* %" + id + ")\n";
+        reg++;
     }
 
     static void allocate_string(String id, int l) {
@@ -328,7 +312,6 @@ class LLVMGenerator {
     }
 
     static void assign_column_i32_from_matrix(String matrix_id, String destination_id, Integer rowSize, Integer colSize, Integer column) {
-
         System.err.println("rowSize " + rowSize);
         for (int row = 0; row < rowSize; row++) {
             // Obliczanie adresu elementu macierzy
@@ -349,9 +332,7 @@ class LLVMGenerator {
 
     }
 
-
     static void assign_i32_from_matrix(String matrix_id, String destination_id, Integer rowSize, Integer colSize, Integer row, Integer col) {
-
         int position = row * colSize + col; // Obliczanie pozycji elementu w macierzy
 
         // Obliczanie adresu elementu macierzy
@@ -419,26 +400,6 @@ class LLVMGenerator {
         // Generowanie kodu do przypisania wartości do odpowiedniego elementu macierzy
         main_text += "store i32 " + value + ", i32* %" + reg + "\n";
         reg++;
-    }
-
-    static void assign_matrix_i32_element_from_array(String id, String value, int valueId, int arraySize, int rowSize, int colSize, int rowId, int colId) {
-        // Obliczenie pozycji elementu w macierzy
-        int position = rowId * colSize + colId;
-
-        // Obliczanie adresu elementu macierzy
-        main_text += "%" + reg + " = getelementptr inbounds [" + rowSize + " x [" + colSize + " x i32]], [" + rowSize + " x [" + colSize + " x i32]]* %" + id + ", i32 0, i32 " + rowId + ", i32 " + colId + "\n";
-        reg++;
-
-        // Obliczanie adresu elementu wektora
-        main_text += "%" + reg + " = getelementptr inbounds [" + arraySize + " x i32], [" + arraySize + " x i32]* %" + value + ", i32 0, i32 " + valueId + "\n";
-        reg++;
-
-        // Ładowanie wartości z wektora
-        main_text += "%" + reg + " = load i32, i32* %" + (reg-1) + "\n";
-        reg++;
-
-        // Przypisanie wartości do odpowiedniego elementu macierzy
-        main_text += "store i32 %" + (reg-1) + ", i32* %" + (reg-3) + "\n";
     }
 
     static void assign_array_double(String id, List<String> values) {
@@ -524,11 +485,6 @@ class LLVMGenerator {
     static void load_string(String id) {
         main_text += "%" + reg + " = load i8*, i8** " + id + "\n";
         reg++;
-    }
-
-    static void load_bool(String id){
-         main_text += "%" + reg + " = load i1, i1* %" + id + "\n";
-         reg++;
     }
 
     static void string_pointer(String id, int l) {
@@ -759,7 +715,6 @@ class LLVMGenerator {
         text += "declare i32 @sprintf(i8*, i8*, ...)\n";
         text += "declare i8* @strcpy(i8*, i8*)\n";
         text += "declare i8* @strcat(i8*, i8*)\n";
-        text += "declare i32 @strcmp(i8*, i8*)\n";
         text += "declare i32 @atoi(i8*)\n";
         text += "declare i32 @__isoc99_scanf(i8*, ...)\n";
         text += "declare double @double_scanf(i8*, ...)\n";
@@ -783,9 +738,6 @@ class LLVMGenerator {
         text += "@false_str = private constant [7 x i8] c\"false\\0A\\00\"\n";
         text += "@.bool_fmt = private constant [3 x i8] c\"%s\00\"\n";
         text += "@.str = private unnamed_addr constant [3 x i8] c\"%f\00\"\n";
-        text += "@inputBuffer = common global [7 x i8] zeroinitializer\n";
-        text += "@boolStr = constant [5 x i8] c\"%6s\\00\\00\"\n";
-        text += "@true_str2 = constant [5 x i8] c\"true\\00\"\n";
         text += header_text;
         text += "define i32 @main() nounwind{\n";
         text += main_text;

@@ -397,16 +397,16 @@ public class LLVMActions extends gramBaseListener {
             Value v = variables.get(ID);
             System.err.println("Current push: " + ID);
             if (v.type == VarType.INT) {
-                LLVMGenerator.load_i32(ID);
+                LLVMGenerator.load_i32(variableType() + ID);
             }
             if (v.type == VarType.REAL) {
-                LLVMGenerator.load_double(ID);
+                LLVMGenerator.load_double(variableType() + ID);
             }
             if (v.type == VarType.STRING) {
-                LLVMGenerator.load_string(ID);
+                LLVMGenerator.load_string(variableType() + ID);
             }
             if (v.type == VarType.FLOAT) {
-                LLVMGenerator.load_float(ID);
+                LLVMGenerator.load_float(variableType() + ID);
             }
             stack.push(new Value("%" + (LLVMGenerator.reg - 1), v.type, v.length));
         } else {
@@ -767,7 +767,7 @@ public class LLVMActions extends gramBaseListener {
         String ID = ctx.ID().getText();
         String INT = ctx.INT().getText();
         if (contains(ID)) {
-            LLVMGenerator.icmp(ID, INT);
+            LLVMGenerator.icmp(variableType()+ID, INT);
         } else {
             error(ctx.getStart().getLine(), "uknown variable: " + ID);
         }
@@ -778,7 +778,7 @@ public class LLVMActions extends gramBaseListener {
         if (ctx.ID() != null) {
             String ID = ctx.ID().getText();
             if (contains(ID)) {
-                LLVMGenerator.load_i32(ID);
+                LLVMGenerator.load_i32(variableType()+ID);
                 LLVMGenerator.startloop("%" + (LLVMGenerator.reg - 1));
             } else {
                 error(ctx.getStart().getLine(), "uknown variable: " + ID);

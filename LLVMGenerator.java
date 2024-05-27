@@ -655,7 +655,7 @@ class LLVMGenerator {
 
 
     static void icmp(String id, String value) {
-        main_text += "%" + reg + " = load i32, i32* %" + id + "\n";
+        main_text += "%" + reg + " = load i32, i32* " + id + "\n";
         reg++;
         main_text += "%" + reg + " = icmp eq i32 %" + (reg - 1) + ", " + value + "\n";
         reg++;
@@ -675,18 +675,18 @@ class LLVMGenerator {
     }
 
     static void startloop(String reps) {
-        declare_i32(true,Integer.toString(reg));
+        declare_i32(false,Integer.toString(reg));
         int counter = reg;
         reg++;
-        assign_i32(Integer.toString(counter), "0");
+        assign_i32("%"+Integer.toString(counter), "0");
         br++;
 
         main_text += "br label %cond" + br + "\n";
         main_text += "cond" + br + ":\n";
 
-        load_i32(Integer.toString(counter));
+        load_i32("%"+Integer.toString(counter));
         add_i32("%" + (reg - 1), "1");
-        assign_i32(Integer.toString(counter), "%" + (reg - 1));
+        assign_i32("%"+Integer.toString(counter), "%" + (reg - 1));
 
         main_text += "%" + reg + " = icmp slt i32 %" + (reg - 2) + ", " + reps + "\n";
         reg++;

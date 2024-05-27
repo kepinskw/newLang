@@ -1,3 +1,4 @@
+import java.net.IDN;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,9 +32,10 @@ public class LLVMActions extends gramBaseListener {
     HashMap<String, Value> variables = new HashMap<String, Value>();
     HashSet<String> functions = new HashSet<String>();
     HashSet<String> localnames = new HashSet<String>();
+    HashSet<String> globalnames = new HashSet<String>();
     Stack<Value> stack = new Stack<Value>();
-
     Boolean global=false;
+    String function;
 
     public Character variableType(){
         if(global){
@@ -46,6 +48,7 @@ public class LLVMActions extends gramBaseListener {
     public void push(String ID, Value v){
         if(global){
             variables.put(ID,v);
+            globalnames.add(ID);
         }else{
             variables.put(ID,v);
             localnames.add(ID);
@@ -54,7 +57,7 @@ public class LLVMActions extends gramBaseListener {
     
     public Boolean contains(String ID){
         if(global){
-            return variables.containsKey(ID);
+            return globalnames.contains(ID);
         }else return localnames.contains(ID);
     }
 
@@ -62,24 +65,26 @@ public class LLVMActions extends gramBaseListener {
     static int BUFFER_SIZE = 16;
 
     @Override
-    public void enterProg(gramParser.ProgContext ctx) {
+    public void enterProg(gramParser.ProgContext ctx){
         global = true;
     }
 
-    @Override
-    public void enterFunction(gramParser.FunctionContext ctx) {
-        global = false;
-    }
+    // @Override
+    // public void enterFunction(gramParser.FunctionContext ctx) {
+    //     global = false;
+    // }
 
-    @Override
-    public void exitFunction(gramParser.FunctionContext ctx) {
-        global = true;
-    }
+    // @Override
+    // public void exitFunction(gramParser.FunctionContext ctx) {
+    //     global = true;
+    // }
 
 
     @Override
     public void exitProg(gramParser.ProgContext ctx) {
         LLVMGenerator.close_main();
+        System.err.println(functions.toString());
+        System.err.println(variables.toString());
         System.out.println(LLVMGenerator.generate());
     }
 
@@ -87,11 +92,17 @@ public class LLVMActions extends gramBaseListener {
     public void exitAssign(gramParser.AssignContext ctx) {
         String ID = ctx.ID().getText();
         Value v = stack.pop();
+        System.err.println("v.nameee  " + v.type);
         if (v.type == VarType.INT) {
-            if (!contains(variableType() + ID)) {
+            if (!contains(ID)) {
+                System.err.println("sad::"+!contains(ID.toString()));
                 LLVMGenerator.declare_i32(global,ID);
-                push(ID, v);
-            } else if (variables.get(ID).type != VarType.INT) {
+                push(ID, v);}
+            // } else if (functions.contains(ID)){
+            //     LLVMGenerator.call(ID);
+            //     push(ID, new Value("@"+(LLVMGenerator.reg - 1), VarType.INT, 0));
+            // } 
+            else if (variables.get(ID).type != VarType.INT) {
                 error(ctx.getStart().getLine(), "Type missmach");
             }
             LLVMGenerator.assign_i32(variableType() +ID, v.name);
@@ -118,7 +129,6 @@ public class LLVMActions extends gramBaseListener {
             } else if (variables.get(ID).type != VarType.BOOL) {
                 error(ctx.getStart().getLine(), "Type missmach");
             }
-
             LLVMGenerator.assign_bool(variableType() +ID, v.name);
         }
         if (v.type == VarType.FLOAT) {
@@ -128,13 +138,10 @@ public class LLVMActions extends gramBaseListener {
             }
             System.err.println("ASSIGN: " + v.name);
             LLVMGenerator.assign_float(variableType() +ID, v.name);
-
- 
-
         } else if (v.type == VarType.ARRAY_i32) {
+            //error(ctx.getStart().getLine(), "assign TPYE ARRAY_I32");
             Value realValue = stack.pop();
             Value array = variables.get(v.name);
-
             //error(ctx.getStart().getLine(), "assign TPYE ARRAY_I32" + array.txt.type);
             System.err.println("v.nameee  " + v.name);
             System.err.println("arrayyy.nameee  " + array.type);
@@ -143,22 +150,19 @@ public class LLVMActions extends gramBaseListener {
                 LLVMGenerator.declare_i32(global,ID);
                 push(ID, new Value(realValue.name, VarType.INT, 1));
 
-
-
             } else if (v.type != VarType.INT) {
                 error(ctx.getStart().getLine(), "Type missmach");
             }
+            System.err.println("Assigning  " + v.name);
             LLVMGenerator.assign_i32_from_array(v.name, ID, array.length, Integer.parseInt(realValue.name));
 
         } else if (v.type == VarType.ARRAY_DOUBLE) {
             Value realValue = stack.pop();
             Value array = variables.get(v.name);
-
             System.err.println("v.nameee  " + v.name);
             if (!contains(ID)) {
                 LLVMGenerator.declare_double(global,ID);
                 push(ID, new Value(realValue.name, VarType.REAL, 1));
-
             } else if (v.type != VarType.REAL) {
                 error(ctx.getStart().getLine(), "Type missmach");
             }
@@ -172,13 +176,11 @@ public class LLVMActions extends gramBaseListener {
                 if (!contains(ID)) {
                     LLVMGenerator.declare_i32(global,ID);
                     push(ID, new Value(v.name, VarType.INT, 1));
-
                 } else if (v.type != VarType.REAL) {
                     error(ctx.getStart().getLine(), "Type missmach");
                 }
                 LLVMGenerator.assign_i32_from_matrix(v.name, ID, v.length, v.length1, Integer.parseInt(row.name), Integer.parseInt(column.name));
                 //error(ctx.getStart().getLine(), "v.name123" + v.name);
-
 
             }else {
                 System.err.println("array form matrix   " + column.type);
@@ -190,11 +192,9 @@ public class LLVMActions extends gramBaseListener {
                         LLVMGenerator.declare_array_i32(ID, v.length1);
                         push(ID, new Value(v.name, VarType.ARRAY_i32, v.length1));
 
-
                     } else if (v.type != VarType.ARRAY_i32) {
                         error(ctx.getStart().getLine(), "Type missmach");
                     }
-
                     System.err.println("assign row len" + v.length);
                     System.err.println("assign col len" + v.length1);
                     LLVMGenerator.assign_array_i32_from_matrix(v.name, ID, v.length, v.length1, Integer.parseInt(column.name));
@@ -209,10 +209,8 @@ public class LLVMActions extends gramBaseListener {
                         error(ctx.getStart().getLine(), "Type missmach");
                     }
                     LLVMGenerator.assign_column_i32_from_matrix(v.name, ID, v.length, v.length1, Integer.parseInt(row.name));
-
                     System.err.println("done " + v.length);
                     System.err.println("done " + v.length1);
-
                 }
             }
 
@@ -242,7 +240,6 @@ public class LLVMActions extends gramBaseListener {
         String INT = ctx.INT().getText();
         System.err.println("EXIT ARRAY ELEMENT   : " + ID);
         if (!contains(ID)) {
-
             error(ctx.getStart().getLine(), "Vector " + ID + "does not exist");
         }
         Value array = variables.get(ID);
@@ -264,10 +261,8 @@ public class LLVMActions extends gramBaseListener {
         String ID = ctx.ID().getText();
         String row = ctx.INT(0).getText();
         String col = ctx.INT(1).getText();
-
         System.err.println("EXIT ARRAY ELEMENT   : " + ID);
         if (!contains(ID)) {
-
             error(ctx.getStart().getLine(), "Vector " + ID + "does not exist");
         }
         Value matrix = variables.get(ID);
@@ -275,12 +270,7 @@ public class LLVMActions extends gramBaseListener {
             error(ctx.getStart().getLine(), "Referenced outside vector");
         }
         Value value = stack.pop();
-        if (stack.isEmpty()) {
-            LLVMGenerator.assign_matrix_i32_element(ID, Integer.parseInt(value.name), matrix.length, matrix.length1, Integer.parseInt(row), Integer.parseInt(col));
-        } else {
-            Value element = stack.pop();
-            LLVMGenerator.assign_matrix_i32_element_from_array(ID, value.name,Integer.parseInt(element.name),value.length, matrix.length, matrix.length1, Integer.parseInt(row), Integer.parseInt(col));
-        }
+        LLVMGenerator.assign_matrix_i32_element(ID, Integer.parseInt(value.name), matrix.length, matrix.length1, Integer.parseInt(row), Integer.parseInt(col));
     }
 
     @Override
@@ -298,10 +288,10 @@ public class LLVMActions extends gramBaseListener {
         } else {
             len = Integer.parseInt(ctx.INT().getText());
         }
+        System.err.println("len: " + len);
         Value v = stack.pop();
         if (len == v.length) {
             if (v.type == VarType.ARRAY_i32) {
-
                 System.err.println("name: " + ID);
                 System.err.println("len: " + len);
                 System.err.println("v: " + v.name);
@@ -309,12 +299,10 @@ public class LLVMActions extends gramBaseListener {
                     LLVMGenerator.declare_array_i32(ID, v.length);
                     System.err.println("array.txt declaration   : " + ID);
 
-
                 }
                 String[] content = v.name.substring(1, v.name.length() - 1).split(",");
                 List<String> contentList = Arrays.asList(content);
                 LLVMGenerator.assign_array_i32(ID, contentList);
-
                 System.err.println("VARIABLE exitAssignArray: " + ID);
                 push(ID, v);
             } else {
@@ -322,16 +310,13 @@ public class LLVMActions extends gramBaseListener {
                 System.err.println("len: " + len);
                 System.err.println("v: " + v.name);
                 if (!contains(ID)) {
-
                     LLVMGenerator.declare_array_double(ID, v.length);
                 }
                 String[] content = v.name.substring(1, v.name.length() - 1).split(",");
                 List<String> contentList = Arrays.asList(content);
                 LLVMGenerator.assign_array_double(ID, contentList);
-
                 System.err.println("VARIABLE exitAssignArray: " + ID);
                 push(ID, v);
-
             }
         } else {
             error(ctx.getStart().getLine(), "declared lenght doesn't match assignment");
@@ -389,10 +374,8 @@ public class LLVMActions extends gramBaseListener {
             } else {
                 stack.push(new Value("all", VarType.STRING, 1));
                 stack.push(new Value(textInt, VarType.INT, 1));
-
                 stack.push(new Value(ID, VarType.MATRIX_I32, array.length,array.length1));
                 System.err.println("Matrix to array start: " + ID);
-
             }
         } else {
             error(ctx.getStart().getLine(), "Referenced outside vector");
@@ -421,12 +404,16 @@ public class LLVMActions extends gramBaseListener {
     @Override
     public void exitVid(gramParser.VidContext ctx) {
         String ID = ctx.ID().getText();
+        
         if (contains(ID)) {
             Value v = variables.get(ID);
-
             System.err.println("Current push: " + ID);
-
             if (v.type == VarType.INT) {
+                if (localnames.contains("%" + ID)){
+                    LLVMGenerator.load_i32("%" + ID);
+                }else if (globalnames.contains("@" + ID)){
+                    LLVMGenerator.load_i32("@"+ ID);
+                }
                 LLVMGenerator.load_i32(variableType() + ID);
             }
             if (v.type == VarType.REAL) {
@@ -439,9 +426,15 @@ public class LLVMActions extends gramBaseListener {
                 LLVMGenerator.load_float(variableType() + ID);
             }
             stack.push(new Value("%" + (LLVMGenerator.reg - 1), v.type, v.length));
-        } else {
+        }
+        else if (functions.contains(ID)){
+            LLVMGenerator.call(ID);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT, 0));
+        } 
+        else {
             error(ctx.getStart().getLine(), "unknown variable " + ID);
         }
+    
     }
 
     @Override
@@ -467,6 +460,7 @@ public class LLVMActions extends gramBaseListener {
     public void exitIntArray(gramParser.IntArrayContext ctx) {
         String tmp = ctx.getText();
         String[] content = tmp.substring(1, tmp.length() - 1).split(",");
+        System.err.println(tmp);
         Value v = new Value(tmp, VarType.ARRAY_i32, content.length);
         stack.push(v);
     }
@@ -475,6 +469,7 @@ public class LLVMActions extends gramBaseListener {
     public void exitRealArray(gramParser.RealArrayContext ctx) {
         String tmp = ctx.getText();
         String[] content = tmp.substring(1, tmp.length() - 1).split(",");
+        System.err.println(tmp);
         Value v = new Value(tmp, VarType.ARRAY_DOUBLE, content.length);
         stack.push(v);
     }
@@ -482,8 +477,12 @@ public class LLVMActions extends gramBaseListener {
     @Override
     public void exitIntMatrix(gramParser.IntMatrixContext ctx) {
         String tmp = ctx.getText();
+        System.err.println(tmp);
         String[] rows = tmp.substring(1, tmp.length() - 1).split(";");
+        System.err.println(rows.length);
         String[] array = rows[0].split(",");
+        System.err.println(array.length);
+        System.err.println(tmp);
         Value v = new Value(tmp, VarType.MATRIX_I32, rows.length, array.length);
         stack.push(v);
     }
@@ -495,6 +494,8 @@ public class LLVMActions extends gramBaseListener {
         }
         Value v2 = stack.pop();
         Value v1 = stack.pop();
+        System.err.println("typ:" + v2.type);
+        System.err.println("typ:" + v1.type);
 
         if (v1.type == v2.type) {
             if (v1.type == VarType.INT) {
@@ -661,7 +662,7 @@ public class LLVMActions extends gramBaseListener {
             stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT, 0));
 
         } else {
-            error(ctx.getStart().getLine(), "To int type mismatch" + v.type);
+            System.err.println("To int type mismatch" + v.type);
         }
     }
 
@@ -675,7 +676,7 @@ public class LLVMActions extends gramBaseListener {
             LLVMGenerator.flotodob(v.name);
             stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.REAL, 0));
         } else {
-            error(ctx.getStart().getLine(), "To real type mismatch" + v.type);
+            System.err.println("To real type mismatch" + v.type);
         }
     }
 
@@ -689,33 +690,20 @@ public class LLVMActions extends gramBaseListener {
             LLVMGenerator.int_to_float(v.name);
             stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.FLOAT, 0));
         } else {
-            error(ctx.getStart().getLine(), "To float type mismatch" + v.type);
+            System.err.println("To float type mismatch" + v.type);
         }
 
     }
 
     @Override
     public void exitBool(gramParser.BoolContext ctx) {
+        System.err.println("Current push: " + ctx.BOOL().getText());
         stack.push(new Value(ctx.BOOL().getText(), VarType.BOOL, 0));
     }
 
     @Override
-    public void exitBid(gramParser.BidContext ctx) {
-        String ID = ctx.ID().getText();
-        if (variables.containsKey(ID)) {
-            Value v = variables.get(ID);
-            if (v.type == VarType.BOOL) {
-                LLVMGenerator.load_bool(ID);
-            }
-            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.BOOL, 0));
-        } else {
-            error(ctx.getStart().getLine(), "unknown variable " + ID);
-        }
-    }
-
-
-    @Override
     public void exitAnd(gramParser.AndContext ctx) {
+        System.err.println("AND: ");
 
         Value v2 = stack.pop();
         Value v1 = stack.pop();
@@ -726,6 +714,7 @@ public class LLVMActions extends gramBaseListener {
 
     @Override
     public void exitOr(gramParser.OrContext ctx) {
+        System.err.println("OR: ");
         Value v2 = stack.pop();
         Value v1 = stack.pop();
 
@@ -743,7 +732,7 @@ public class LLVMActions extends gramBaseListener {
     }
 
     @Override
-    public void exitNega(gramParser.NegaContext ctx) {
+    public void exitNeg(gramParser.NegContext ctx) {
         Value v1 = stack.pop();
 
         LLVMGenerator.log_neg(v1.name);
@@ -754,12 +743,15 @@ public class LLVMActions extends gramBaseListener {
     public void exitPrint(gramParser.PrintContext ctx) {
         String ID = ctx.ID().getText();
         Value v = variables.get(ID);
-
         System.err.println("Error, line IDD print  " + ID);
         if (v.type != null) {
             if (v.type == VarType.INT) {
-                LLVMGenerator.printf_i32(variableType() + ID);
-
+                if(localnames.contains(ID)){
+                    LLVMGenerator.printf_i32("%" + ID);}
+                else if(globalnames.contains(ID)){
+                    LLVMGenerator.printf_i32("@" + ID);
+                }
+                // LLVMGenerator.printf_i32(variableType() + ID);
             }
             if (v.type == VarType.REAL) {
                 LLVMGenerator.printf_double(variableType() + ID);
@@ -832,44 +824,68 @@ public class LLVMActions extends gramBaseListener {
         }
     }
 
+    @Override 
+    public void exitFpar(gramParser.FparContext ctx) {
+       String ID = ctx.ID().getText();
+       functions.add(ID); 
+       function = ID;
+       LLVMGenerator.functionstart(ID);
+    }
+
+    @Override
+    public void enterFblock(gramParser.FblockContext ctx) {
+       global = false;
+    }
+
+    @Override
+    public void exitFblock(gramParser.FblockContext ctx) {
+       if( ! localnames.contains(function) ){
+            localnames.add(function);
+            LLVMGenerator.declare_i32(false, function);
+            LLVMGenerator.assign_i32("%"+function, "0");
+       }
+       LLVMGenerator.load_i32( "%"+function );
+       LLVMGenerator.functionend();
+       System.err.println(localnames.toString());
+
+       localnames = new HashSet<String>();
+       global = true;
+    }
+
     @Override
     public void exitPrintLetter(gramParser.PrintLetterContext ctx) {
         String IDstring = ctx.letter().getText();
         String ID = IDstring.replaceAll("\\[\\d*\\]", "");
-
         System.err.println("Variable IDDDD " + ID);
         Value v = variables.get(ID);
         System.err.println("Variable " + v.type);
-
         if (v.type != null) {
             if (v.type == VarType.ARRAY_i32) {
                 Value elementId = stack.pop();
                 Value position = stack.pop();
+                System.err.println("Variable " + position.name);
                 LLVMGenerator.printf_array_i32_element(elementId.name, v.length, Integer.parseInt(position.name));
             } else if (v.type == VarType.ARRAY_DOUBLE) {
                 Value elementId = stack.pop();
                 Value position = stack.pop();
+                System.err.println("Variable " + position.name);
                 LLVMGenerator.printf_array_double_element(elementId.name, v.length, Integer.parseInt(position.name));
             } else if (v.type == VarType.MATRIX_I32) {
                 Value elementId = stack.pop();
                 Value columnsId = stack.pop();
-
                 System.err.println("Element ID name " + elementId.name);
                 if (!stack.isEmpty()) {
                     System.err.println("noemptystack " + elementId.name);
                     Value rowId = stack.pop();
                     System.err.println("noemptystack row " + rowId.type);
                     System.err.println("noemptystack column " + columnsId.type);
-
                     if (columnsId.type == VarType.INT && rowId.type == VarType.INT) {
                         LLVMGenerator.printf_matrix_i32_element(elementId.name, v.length, v.length1, Integer.parseInt(rowId.name), Integer.parseInt(columnsId.name));
                     } else if (columnsId.type == VarType.STRING && rowId.type == VarType.INT) {
                         LLVMGenerator.printf_column_i32_from_matrix(elementId.name, v.length, v.length1, Integer.parseInt(rowId.name));
-
                         System.err.println("column " + elementId.name);
                     } else if (columnsId.type == VarType.INT && rowId.type == VarType.STRING) {
                         System.err.println("array " + elementId.name);
-
                         LLVMGenerator.printf_array_i32_from_matrix(elementId.name, v.length, v.length1, Integer.parseInt(columnsId.name));
                     }
                 }
@@ -899,6 +915,7 @@ public class LLVMActions extends gramBaseListener {
     }
 
     void error(int line, String msg) {
+        System.err.println("Error, line " + line + ", " + msg);
         System.exit(1);
     }
 

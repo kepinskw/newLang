@@ -58,9 +58,10 @@ transBool: ID   #bid
 
 func: IF cond THEN blockif ENDIF  #if
     | FOR reps block ENDFOR       #for 
-    | FUN fpar block ENDFUN       #function;
+    | FUN fpar fblock ENDFUN       #function;
 
 blockif: block;
+fblock: block;
 
 cond: ID '==' INT;
 

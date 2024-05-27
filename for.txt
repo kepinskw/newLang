@@ -1,0 +1,12 @@
+a = 1
+
+for 5
+print a
+endfor
+
+b = 3
+c = 10
+
+for b
+print c
+endfor

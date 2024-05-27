@@ -30,6 +30,17 @@ test_bool:
 	java -cp $(ANTLR):output:. Main bool.txt > input.ll
 	lli input.ll
 
+test_func:
+	java -cp $(ANTLR):output:. Main func.txt > input.ll
+	lli input.ll
+
+test_if:
+	java -cp $(ANTLR):output:. Main if.txt > input.ll
+	lli input.ll
+
+test_for:
+	java -cp $(ANTLR):output:. Main for.txt > input.ll
+	lli input.ll
 
 test:
 	java -cp $(ANTLR):output:. Main test.txt > input.ll

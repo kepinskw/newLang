@@ -16,14 +16,14 @@ class LLVMGenerator {
 
 
     static void printf_i32(String id) {
-        main_text += "%" + reg + " = load i32, i32* %" + id + "\n";
+        main_text += "%" + reg + " = load i32, i32* " + id + "\n";
         reg++;
         main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strpi, i32 0, i32 0), i32 %" + (reg - 1) + ")\n";
         reg++;
     }
 
     static void printf_bool(String id) {
-        main_text += "%" + reg + " = load i1, i1* %" + id + "\n";
+        main_text += "%" + reg + " = load i1, i1* " + id + "\n";
         reg++;
         String formatStr = "%" + reg + " = select i1 %" + (reg - 1) + ", i8* getelementptr inbounds ([6 x i8], [6 x i8]* @true_str, i32 0, i32 0), i8* getelementptr inbounds ([7 x i8], [7 x i8]* @false_str, i32 0, i32 0)\n";
         main_text += formatStr;
@@ -33,20 +33,20 @@ class LLVMGenerator {
     }
 
     static void printf_double(String id) {
-        main_text += "%" + reg + " = load double, double* %" + id + "\n";
+        main_text += "%" + reg + " = load double, double* " + id + "\n";
         reg++;
         main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strpd, i32 0, i32 0), double %" + (reg - 1) + ")\n";
         reg++;
     }
 
     static void printf_float(String id) {
-         main_text += "%" + reg + " = load float, float* %" + id + "\n";
-         reg++;
-         main_text += "%" + reg + "= fpext float %" + (reg-1) + " to double \n";
-         reg++;
-         main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strpd, i32 0, i32 0), double %" + (reg - 1) + ")\n";
-         reg++;
-  }
+        main_text += "%" + reg + " = load float, float* " + id + "\n";
+        reg++;
+        main_text += "%" + reg + "= fpext float %" + (reg - 1) + " to double \n";
+        reg++;
+        main_text += "%" + reg + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strpd, i32 0, i32 0), double %" + (reg - 1) + ")\n";
+        reg++;
+    }
 
     static void printf_string(String id) {
         main_text += "%" + reg + " = load i8*, i8** %" + id + "\n";
@@ -88,7 +88,9 @@ class LLVMGenerator {
             main_text += "%" + reg + " = getelementptr inbounds [" + rows + " x [" + columns + " x i32]], [" + rows + " x [" + columns + " x i32]]* %" + id + ", i32 0, i32 " + rowId + ", i32 " + i + "\n";
             reg++;
             // Załaduj wartość elementu z obliczonego adresu
-            printf_array(i,columns);
+
+            printf_array(i, columns);
+
         }
     }
 
@@ -98,7 +100,10 @@ class LLVMGenerator {
             main_text += "%" + reg + " = getelementptr inbounds [" + rows + " x [" + columns + " x i32]], [" + rows + " x [" + columns + " x i32]]* %" + id + ", i32 0, i32 " + i + ", i32 " + columnId + "\n";
             reg++;
             // Załaduj wartość elementu z obliczonego adresu
-            printf_array(i,rows);
+
+            printf_array(i, rows);
+
+
         }
     }
 
@@ -109,11 +114,13 @@ class LLVMGenerator {
             main_text += "%" + reg + " = getelementptr inbounds [" + size + " x i32], [" + size + " x i32]* %" + id + ", i32 0, i32 " + i + "\n";
             reg++;
             // Załaduj wartość elementu z obliczonego adresu
-            printf_array(i,size);
+
+            printf_array(i, size);
         }
     }
 
-    static void printf_array(int i,int size){
+    static void printf_array(int i, int size) {
+
         System.err.println("print array i: " + i);
         main_text += "%" + reg + " = load i32, i32* %" + (reg - 1) + "\n";
         reg++;
@@ -142,7 +149,7 @@ class LLVMGenerator {
                     formatStr = "[5 x i8], [5 x i8]* @str_first_format";
                 } else if (i == row - 1 && j == col - 1) {
                     formatStr = "[5 x i8], [5 x i8]* @str_last_format";
-                } else if (i != row -1 && j == col - 1) {
+                } else if (i != row - 1 && j == col - 1) {
                     formatStr = "[5 x i8], [5 x i8]* @str_row_last_format";
                 } else if (i != 0 && j == 0) {
                     formatStr = "[5 x i8], [5 x i8]* @str_row_first_format";
@@ -233,41 +240,61 @@ class LLVMGenerator {
         reg++;
     }
 
-    static void declare_i32(String id) {
-        main_text += "%" + id + " = alloca i32\n";
+    static void declare_i32(Boolean global, String id) {
+        if (!global) {
+            main_text += "%" + id + " = alloca i32\n";
+        }else {
+            header_text += "@" + id + " = global i32 0\n";
+        }
     }
 
-    static void declare_double(String id) {
-        main_text += "%" + id + " = alloca double\n";
+    static void declare_double(Boolean global,String id) {
+        if (!global) {
+            main_text += "%" + id + " = alloca double\n";
+        }else {
+            header_text += "@" + id + " = global double 0.0\n";
+        }
     }
-    
-    static void declare_float(String id) {
-      main_text += "%" + id + " = alloca float\n";
-  }
+
+    static void declare_float(Boolean global,String id) {
+        if (!global) {
+            main_text += "%" + id + " = alloca float\n";
+        }else {
+            header_text += "@" + id + " = global float 0.0\n";
+        }
+    }
 
     static void declare_array_i32(String id, int size) {
-        main_text += "%" + id + " = alloca [" + (size) + " x i32]\n";
+        main_text += id + " = alloca [" + (size) + " x i32]\n";
     }
 
-    static void declare_matrix_i32(String id, int rows,int columns) {
-        main_text += "%" + id + " = alloca [" + rows + " x [ " + columns + " x i32 ]]\n";
+    static void declare_matrix_i32(String id, int rows, int columns) {
+        main_text += id + " = alloca [" + rows + " x [ " + columns + " x i32 ]]\n";
 
     }
 
     static void declare_array_double(String id, int size) {
-        main_text += "%" + id + " = alloca [" + size + " x double]\n";
+        main_text += id + " = alloca [" + size + " x double]\n";
     }
 
-    static void declare_string(String id) {
-        main_text += "%" + id + " = alloca i8*\n";
+    static void declare_string(Boolean global,String id) {
+        if (!global) {
+            main_text += "%" + id + " = alloca i8*\n";
+        }else {
+            header_text += "@" + id + " = global i8* 0\n";
+        }
     }
 
-    static void declare_bool(String id) {
-        main_text += "%" + id + " = alloca i1\n";
+    static void declare_bool(Boolean global,String id) {
+        if (!global) {
+            main_text += "%" + id + " = alloca i1\n";
+        }else {
+            header_text += "@" + id + " = global i1 1\n";
+        }
     }
 
     static void assign_i32(String id, String value) {
-        main_text += "store i32 " + value + ", i32* %" + id + "\n";
+        main_text += "store i32 " + value + ", i32* " + id + "\n";
     }
 
     static void assign_i32_from_array(String array_id, String destination_id, Integer size, Integer position) {
@@ -280,7 +307,7 @@ class LLVMGenerator {
         main_text += "store i32 %" + (reg - 1) + ", i32* %" + destination_id + "\n";
     }
 
-    static void assign_array_i32_from_matrix(String matrix_id, String destination_id, Integer rowSize, Integer colSize, Integer row){
+    static void assign_array_i32_from_matrix(String matrix_id, String destination_id, Integer rowSize, Integer colSize, Integer row) {
         for (int col = 0; col < colSize; col++) {
             // Obliczanie adresu elementu macierzy
             main_text += "%" + reg + " = getelementptr inbounds [" + rowSize + " x [" + colSize + " x i32]], [" + rowSize + " x [" + colSize + " x i32]]* %" + matrix_id + ", i32 0, i32 " + row + ", i32 " + col + "\n";
@@ -300,7 +327,8 @@ class LLVMGenerator {
 
     }
 
-    static void assign_column_i32_from_matrix(String matrix_id, String destination_id, Integer rowSize, Integer colSize, Integer column){
+    static void assign_column_i32_from_matrix(String matrix_id, String destination_id, Integer rowSize, Integer colSize, Integer column) {
+
         System.err.println("rowSize " + rowSize);
         for (int row = 0; row < rowSize; row++) {
             // Obliczanie adresu elementu macierzy
@@ -321,7 +349,9 @@ class LLVMGenerator {
 
     }
 
-    static void assign_i32_from_matrix(String matrix_id, String destination_id, Integer rowSize,Integer colSize, Integer row,Integer col) {
+
+    static void assign_i32_from_matrix(String matrix_id, String destination_id, Integer rowSize, Integer colSize, Integer row, Integer col) {
+
         int position = row * colSize + col; // Obliczanie pozycji elementu w macierzy
 
         // Obliczanie adresu elementu macierzy
@@ -446,19 +476,19 @@ class LLVMGenerator {
     }
 
     static void assign_bool(String id, String value) {
-        main_text += "store i1 " + value + ", i1* %" + id + "\n";
+        main_text += "store i1 " + value + ", i1* " + id + "\n";
     }
 
     static void assign_double(String id, String value) {
-        main_text += "store double " + value + ", double* %" + id + "\n";
+        main_text += "store double " + value + ", double* " + id + "\n";
     }
-    
+
     static void assign_float(String id, String value) {
-      main_text += "store float " + value + ", float* %" + id + "\n";
-  }
+        main_text += "store float " + value + ", float* " + id + "\n";
+    }
 
     static void assign_string(String id) {
-        main_text += "store i8* %" + (reg - 1) + ", i8** %" + id + "\n";
+        main_text += "store i8* " + (reg - 1) + ", i8** " + id + "\n";
     }
 
     static void constant_string(String content) {
@@ -477,22 +507,22 @@ class LLVMGenerator {
     }
 
     static void load_i32(String id) {
-        main_text += "%" + reg + " = load i32, i32* %" + id + "\n";
+        main_text += "%" + reg + " = load i32, i32* " + id + "\n";
         reg++;
     }
 
     static void load_double(String id) {
-        main_text += "%" + reg + " = load double, double* %" + id + "\n";
+        main_text += "%" + reg + " = load double, double* " + id + "\n";
         reg++;
     }
 
     static void load_float(String id) {
-      main_text += "%" + reg + " = load float, float* %" + id + "\n";
-      reg++;
-  }
+        main_text += "%" + reg + " = load float, float* " + id + "\n";
+        reg++;
+    }
 
     static void load_string(String id) {
-        main_text += "%" + reg + " = load i8*, i8** %" + id + "\n";
+        main_text += "%" + reg + " = load i8*, i8** " + id + "\n";
         reg++;
     }
 
@@ -515,11 +545,11 @@ class LLVMGenerator {
         main_text += "%" + reg + " = fadd double " + val1 + ", " + val2 + "\n";
         reg++;
     }
-    
+
     static void add_float(String val1, String val2) {
-      main_text += "%" + reg + " = fadd float " + val1 + ", " + val2 + "\n";
-      reg++;
-  }
+        main_text += "%" + reg + " = fadd float " + val1 + ", " + val2 + "\n";
+        reg++;
+    }
 
     static void add_string(String id1, int l1, String id2, int l2) {
         allocate_string("str" + str, l1 + l2);
@@ -547,9 +577,9 @@ class LLVMGenerator {
     }
 
     static void neg_float(String val2) {
-      main_text += "%" + reg + " = fsub float " + -0.0 + ", " + val2 + "\n";
-      reg++;
-  }
+        main_text += "%" + reg + " = fsub float " + -0.0 + ", " + val2 + "\n";
+        reg++;
+    }
 
     static void sub_i32(String val1, String val2) {
         main_text += "%" + reg + " = sub i32 " + val1 + ", " + val2 + "\n";
@@ -562,9 +592,9 @@ class LLVMGenerator {
     }
 
     static void sub_float(String val1, String val2) {
-      main_text += "%" + reg + " = fsub float " + val1 + ", " + val2 + "\n";
-      reg++;
-  }
+        main_text += "%" + reg + " = fsub float " + val1 + ", " + val2 + "\n";
+        reg++;
+    }
 
     static void mult_i32(String val1, String val2) {
         main_text += "%" + reg + " = mul i32 " + val1 + ", " + val2 + "\n";
@@ -577,9 +607,9 @@ class LLVMGenerator {
     }
 
     static void mult_float(String val1, String val2) {
-      main_text += "%" + reg + " = fmul float " + val1 + "," + val2 + "\n";
-      reg++;
-  }
+        main_text += "%" + reg + " = fmul float " + val1 + "," + val2 + "\n";
+        reg++;
+    }
 
     static void div_i32(String val1, String val2) {
         main_text += "%" + reg + " = sdiv i32 " + val1 + ", " + val2 + "\n";
@@ -592,9 +622,9 @@ class LLVMGenerator {
     }
 
     static void div_float(String val1, String val2) {
-      main_text += "%" + reg + " = fdiv float " + val1 + ", " + val2 + "\n";
-      reg++;
-  }
+        main_text += "%" + reg + " = fdiv float " + val1 + ", " + val2 + "\n";
+        reg++;
+    }
 
     static void log_and(String val1, String val2) {
         main_text += "%" + reg + " = and i1 " + val1 + ", " + val2 + "\n";
@@ -627,26 +657,26 @@ class LLVMGenerator {
     }
 
     static void dobtoflo(String id) {
-      main_text += "%" + reg + "= fptrunc double " + id +" to float \n";
-      // main_text += "%" + reg + " = call i16 @llvm.convert.to.fp16.f64(double "+ id +")\n";
-      // main_text += "store i16 %"+ reg +", i16* @x";
-      reg++;
+        main_text += "%" + reg + "= fptrunc double " + id + " to float \n";
+        // main_text += "%" + reg + " = call i16 @llvm.convert.to.fp16.f64(double "+ id +")\n";
+        // main_text += "store i16 %"+ reg +", i16* @x";
+        reg++;
     }
 
     static void flotodob(String id) {
-      main_text += "%" + reg + "= fpext float " + id + " to double \n";
-      // main_text += "%" + reg + " = call double @llvm.convert.from.fp16(i16" + id + " )\n";
-      reg++;
+        main_text += "%" + reg + "= fpext float " + id + " to double \n";
+        // main_text += "%" + reg + " = call double @llvm.convert.from.fp16(i16" + id + " )\n";
+        reg++;
     }
 
-    static void float_to_int (String id){
-      main_text += "%" + reg + "= fptosi float " + id + " to i32 \n";
-      reg ++;
+    static void float_to_int(String id) {
+        main_text += "%" + reg + "= fptosi float " + id + " to i32 \n";
+        reg++;
     }
 
-    static void int_to_float (String id){
-      main_text += "%" + reg + "= sitofp i32 " + id + " to float \n";
-      reg ++;
+    static void int_to_float(String id) {
+        main_text += "%" + reg + "= sitofp i32 " + id + " to float \n";
+        reg++;
     }
 
     static void int_to_string(String in, int lout) {
@@ -668,56 +698,56 @@ class LLVMGenerator {
     }
 
 
-    static void icmp(String id, String value){
-      main_text += "%"+reg+" = load i32, i32* %"+id+"\n";
-      reg++;
-      main_text += "%"+reg+" = icmp eq i32 %"+(reg-1)+", "+value+"\n";
-      reg++;
+    static void icmp(String id, String value) {
+        main_text += "%" + reg + " = load i32, i32* " + id + "\n";
+        reg++;
+        main_text += "%" + reg + " = icmp eq i32 %" + (reg - 1) + ", " + value + "\n";
+        reg++;
     }
 
-    static void ifstart(){
-      br++;
-      main_text += "br i1 %"+(reg-1)+", label %true"+br+", label %false"+br+"\n";
-      main_text += "true"+br+":\n";
-      brstack.push(br);
+    static void ifstart() {
+        br++;
+        main_text += "br i1 %" + (reg - 1) + ", label %true" + br + ", label %false" + br + "\n";
+        main_text += "true" + br + ":\n";
+        brstack.push(br);
     }
 
-    static void ifend(){
-      int b = brstack.pop();
-      main_text += "br label %false"+b+"\n";
-      main_text += "false"+b+":\n";
+    static void ifend() {
+        int b = brstack.pop();
+        main_text += "br label %false" + b + "\n";
+        main_text += "false" + b + ":\n";
     }
 
-    static void startloop(String reps){
-      declare_i32(Integer.toString(reg));
-      int counter = reg;
-      reg++;
-      assign_i32(Integer.toString(counter), "0");
-      br++;
+    static void startloop(String reps) {
+        declare_i32(false,Integer.toString(reg));
+        int counter = reg;
+        reg++;
+        assign_i32("%"+Integer.toString(counter), "0");
+        br++;
 
-      main_text += "br label %cond"+br+"\n";
-      main_text += "cond"+br+":\n";
+        main_text += "br label %cond" + br + "\n";
+        main_text += "cond" + br + ":\n";
 
-      load_i32(Integer.toString(counter));
-      add_i32("%"+(reg-1), "1");
-      assign_i32(Integer.toString(counter), "%"+(reg-1));
+        load_i32("%"+Integer.toString(counter));
+        add_i32("%" + (reg - 1), "1");
+        assign_i32("%"+Integer.toString(counter), "%" + (reg - 1));
 
-      main_text += "%"+reg+" = icmp slt i32 %"+(reg-2)+", "+reps+"\n";
-      reg++;
+        main_text += "%" + reg + " = icmp slt i32 %" + (reg - 2) + ", " + reps + "\n";
+        reg++;
 
-      main_text += "br i1 %"+(reg-1)+", label %true"+br+", label %false"+br+"\n";
-      main_text += "true"+br+":\n";
-      brstack.push(br);
+        main_text += "br i1 %" + (reg - 1) + ", label %true" + br + ", label %false" + br + "\n";
+        main_text += "true" + br + ":\n";
+        brstack.push(br);
     }
 
-    static void endloop(){
-      int b = brstack.pop();
-      main_text += "br label %cond"+b+"\n";
-      main_text += "false"+b+":\n";
+    static void endloop() {
+        int b = brstack.pop();
+        main_text += "br label %cond" + b + "\n";
+        main_text += "false" + b + ":\n";
     }
 
-    static void close_main(){
-      main_text += buffer;
+    static void close_main() {
+        main_text += buffer;
     }
 
 

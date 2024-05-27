@@ -1,3 +1,22 @@
-a{2}{3}=[1,2,7;3,4,9]
-b=a[][1]
-print b
+
+
+fun a
+a=1
+endfun
+
+
+print a
+
+
+d = 2
+e = a + d
+print e
+
+for 10
+print a
+endfor
+
+if a == 1
+print c
+endif
+

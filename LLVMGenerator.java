@@ -11,26 +11,8 @@ class LLVMGenerator {
     static int reg = 1;
     static int str = 1;
     static int br = 0;
-    static int tmp = 1;
-    static int main_tmp = 1;
 
     static Stack<Integer> brstack = new Stack<Integer>();
-
-    static void functionstart(String id) {
-        main_text += buffer;
-        buffer = ""; // Reset buffer
-        main_tmp = tmp;
-        buffer = "define i32 @" + id + "() nounwind {\n";
-        tmp = 1;
-    }
-
-    static void functionend() {
-        buffer += "ret i32 " + (tmp - 1) + "\n";
-        buffer += "}\n";
-        main_text += buffer;
-        buffer = "";
-        tmp = main_tmp;
-    }
 
 
     static void printf_i32(String id) {

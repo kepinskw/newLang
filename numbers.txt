@@ -1,122 +1,124 @@
+xx = "xxxxxxxxx"
+
 result11 = (5 + 3) * 2 - 4 / 2
 print result11
 test11 = 14
 print test11
-print "xxxxxxxxx"
+print xx
 
 result21 = 10 / (2 + 3) * (4 - 1)
 print result21
 test21 = 6
 print test21
-print "xxxxxxxxx"
+print xx
 
 result31 = (8 - 2) * (3 + 1) / 2
 print result31
 test31 = 12
 print test31
-print "xxxxxxxxx"
+print xx
 
 result41 = 12 + 6 / (2 * 3) - (5 - 3)
 print result41
 test41=11
 print test41
-print "xxxxxxxxx"
+print xx
 
 result51 = (7 + 3 * 2) - 10 / 2
 print result51
 test51=8
 print test51
-print "xxxxxxxxx"
+print xx
 
 result61 = (10 - 4) / 2 + (6 * 3)
 print result61
 test61=21
 print test61
-print "xxxxxxxxx"
+print xx
 
 result71 = (15 / 3 + 2) * (4 - 1)
 print result71
 test71 = 21
 print test71
-print "xxxxxxxxx"
+print xx
 
 result81 = 20 - (8 / 2) + (5 * 3)
 print result81
 test81=31
 print test81
-print "xxxxxxxxx"
+print xx
 
 result91 = (9 + 3) * (4 / 2) - 7
 print result91
 test91=17
 print test91
-print "xxxxxxxxx"
+print xx
 
 result101 = ((6 + 2) * 3) / (9 - 5)
 print result101
 test101=6
 print test101
-print "xxxxxxxxx"
+print xx
 
 result1 = (5.0 + 3.0) * 2.0 - 4.0 / 2.0
 print result1
 test1=14.0
 print test1
-print "xxxxxxxxx"
+print xx
 
 result2 = 10.0 / (2.0 + 3.0) * (4.0 - 1.0)
 print result2
 test1=6.0
 print test1
-print "xxxxxxxxx"
+print xx
 
 result3 = (8.0 - 2.0) * (3.0 + 1.0) / 2.0
 print result3
 test1=12.0
 print test1
-print "xxxxxxxxx"
+print xx
 
 result4 = 12.0 + 6.0 / (2.0 * 3.0) - (5.0 - 3.0)
 print result4
 test1=11.0
 print test1
-print "xxxxxxxxx"
+print xx
 
 result5 = (7.0 + 3.0 * 2.0) - 10.0 / 2.0
 print result5
 test1=8.0
 print test1
-print "xxxxxxxxx"
+print xx
 
 result6 = (10.0 - 4.0) / 2.0 + (6.0 * 3.0)
 print result6
 test1=21.0
 print test1
-print "xxxxxxxxx"
+print xx
 
 result7 = (15.0 / 3.0 + 2.0) * (4.0 - 1.0)
 print result7
 test1=21.0
 print test1
-print "xxxxxxxxx"
+print xx
 
 result8 = 20.0 - (8.0 / 2.0) + (5.0 * 3.0)
 print result8
 test1=31.0
 print test1
-print "xxxxxxxxx"
+print xx
 
 result9 = (9.0 + 3.0) * (4.0 / 2.0) - 7.0
 print result9
 test1=17.0
 print test1
-print "xxxxxxxxx"
+print xx
 
 result10 = ((6.0 + 2.0) * 3.0) / (9.0 - 5.0)
 print result10
 test1=6.0
 print test1
-print "xxxxxxxxx"
+print xx
 
 a1 = (float) 12
 a2 = (float) 1.23

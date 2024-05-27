@@ -1,11 +1,11 @@
+
+fun a
 a=1
+endfun
+
+
 print a
 
-b=1.23
-print b
-
-c=false
-print c
 
 d = 2
 e = a + d

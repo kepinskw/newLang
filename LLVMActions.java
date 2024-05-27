@@ -1,3 +1,4 @@
+import java.net.IDN;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,8 +32,10 @@ public class LLVMActions extends gramBaseListener {
     HashMap<String, Value> variables = new HashMap<String, Value>();
     HashSet<String> functions = new HashSet<String>();
     HashSet<String> localnames = new HashSet<String>();
+    HashSet<String> globalnames = new HashSet<String>();
     Stack<Value> stack = new Stack<Value>();
     Boolean global=false;
+    String function;
 
     public Character variableType(){
         if(global){
@@ -45,6 +48,7 @@ public class LLVMActions extends gramBaseListener {
     public void push(String ID, Value v){
         if(global){
             variables.put(ID,v);
+            globalnames.add(ID);
         }else{
             variables.put(ID,v);
             localnames.add(ID);
@@ -53,7 +57,7 @@ public class LLVMActions extends gramBaseListener {
     
     public Boolean contains(String ID){
         if(global){
-            return variables.containsKey(ID);
+            return globalnames.contains(ID);
         }else return localnames.contains(ID);
     }
 
@@ -65,20 +69,22 @@ public class LLVMActions extends gramBaseListener {
         global = true;
     }
 
-    @Override
-    public void enterFunction(gramParser.FunctionContext ctx) {
-        global = false;
-    }
+    // @Override
+    // public void enterFunction(gramParser.FunctionContext ctx) {
+    //     global = false;
+    // }
 
-    @Override
-    public void exitFunction(gramParser.FunctionContext ctx) {
-        global = true;
-    }
+    // @Override
+    // public void exitFunction(gramParser.FunctionContext ctx) {
+    //     global = true;
+    // }
 
 
     @Override
     public void exitProg(gramParser.ProgContext ctx) {
         LLVMGenerator.close_main();
+        System.err.println(functions.toString());
+        System.err.println(variables.toString());
         System.out.println(LLVMGenerator.generate());
     }
 
@@ -88,10 +94,15 @@ public class LLVMActions extends gramBaseListener {
         Value v = stack.pop();
         System.err.println("v.nameee  " + v.type);
         if (v.type == VarType.INT) {
-            if (!contains(variableType() + ID)) {
+            if (!contains(ID)) {
+                System.err.println("sad::"+!contains(ID.toString()));
                 LLVMGenerator.declare_i32(global,ID);
-                push(ID, v);
-            } else if (variables.get(ID).type != VarType.INT) {
+                push(ID, v);}
+            // } else if (functions.contains(ID)){
+            //     LLVMGenerator.call(ID);
+            //     push(ID, new Value("@"+(LLVMGenerator.reg - 1), VarType.INT, 0));
+            // } 
+            else if (variables.get(ID).type != VarType.INT) {
                 error(ctx.getStart().getLine(), "Type missmach");
             }
             LLVMGenerator.assign_i32(variableType() +ID, v.name);
@@ -393,10 +404,16 @@ public class LLVMActions extends gramBaseListener {
     @Override
     public void exitVid(gramParser.VidContext ctx) {
         String ID = ctx.ID().getText();
+        
         if (contains(ID)) {
             Value v = variables.get(ID);
             System.err.println("Current push: " + ID);
             if (v.type == VarType.INT) {
+                if (localnames.contains("%" + ID)){
+                    LLVMGenerator.load_i32("%" + ID);
+                }else if (globalnames.contains("@" + ID)){
+                    LLVMGenerator.load_i32("@"+ ID);
+                }
                 LLVMGenerator.load_i32(variableType() + ID);
             }
             if (v.type == VarType.REAL) {
@@ -409,9 +426,15 @@ public class LLVMActions extends gramBaseListener {
                 LLVMGenerator.load_float(variableType() + ID);
             }
             stack.push(new Value("%" + (LLVMGenerator.reg - 1), v.type, v.length));
-        } else {
+        }
+        else if (functions.contains(ID)){
+            LLVMGenerator.call(ID);
+            stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.INT, 0));
+        } 
+        else {
             error(ctx.getStart().getLine(), "unknown variable " + ID);
         }
+    
     }
 
     @Override
@@ -723,7 +746,12 @@ public class LLVMActions extends gramBaseListener {
         System.err.println("Error, line IDD print  " + ID);
         if (v.type != null) {
             if (v.type == VarType.INT) {
-                LLVMGenerator.printf_i32(variableType() + ID);
+                if(localnames.contains(ID)){
+                    LLVMGenerator.printf_i32("%" + ID);}
+                else if(globalnames.contains(ID)){
+                    LLVMGenerator.printf_i32("@" + ID);
+                }
+                // LLVMGenerator.printf_i32(variableType() + ID);
             }
             if (v.type == VarType.REAL) {
                 LLVMGenerator.printf_double(variableType() + ID);
@@ -794,6 +822,34 @@ public class LLVMActions extends gramBaseListener {
         if (ctx.getParent() instanceof gramParser.ForContext) {
             LLVMGenerator.endloop();
         }
+    }
+
+    @Override 
+    public void exitFpar(gramParser.FparContext ctx) {
+       String ID = ctx.ID().getText();
+       functions.add(ID); 
+       function = ID;
+       LLVMGenerator.functionstart(ID);
+    }
+
+    @Override
+    public void enterFblock(gramParser.FblockContext ctx) {
+       global = false;
+    }
+
+    @Override
+    public void exitFblock(gramParser.FblockContext ctx) {
+       if( ! localnames.contains(function) ){
+            localnames.add(function);
+            LLVMGenerator.declare_i32(false, function);
+            LLVMGenerator.assign_i32("%"+function, "0");
+       }
+       LLVMGenerator.load_i32( "%"+function );
+       LLVMGenerator.functionend();
+       System.err.println(localnames.toString());
+
+       localnames = new HashSet<String>();
+       global = true;
     }
 
     @Override

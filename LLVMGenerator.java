@@ -7,10 +7,11 @@ class LLVMGenerator {
 
     static String header_text = "";
     static String main_text = "";
-    static String buffer = "";
+    static String m_text = "";
     static int reg = 1;
     static int str = 1;
     static int br = 0;
+    static int main_reg = 1;
 
     static Stack<Integer> brstack = new Stack<Integer>();
 
@@ -225,10 +226,10 @@ class LLVMGenerator {
     }
 
     static void declare_i32(Boolean global, String id) {
-        if (!global) {
-            main_text += "%" + id + " = alloca i32\n";
-        }else {
+        if (global) {
             header_text += "@" + id + " = global i32 0\n";
+        }else {
+            main_text += "%" + id + " = alloca i32\n";
         }
     }
 
@@ -702,8 +703,28 @@ class LLVMGenerator {
         main_text += "false" + b + ":\n";
     }
 
+    static void functionstart(String id){
+        m_text += main_text;
+        main_reg = reg;
+        main_text = "define i32 @"+id+"() nounwind {\n";
+        reg = 1;
+     }
+
+     static void functionend(){
+        main_text += "ret i32 %"+(reg-1)+"\n"; 
+        main_text += "}\n";
+        header_text += main_text;
+        main_text = "";
+        reg = main_reg;
+    }
+
+    static void call(String id){
+        main_text += "%" + reg + " = call i32 @" + id + "()\n";
+        reg++;
+    }
+
     static void close_main() {
-        main_text += buffer;
+        m_text += main_text;
     }
 
 
@@ -740,7 +761,7 @@ class LLVMGenerator {
         text += "@.str = private unnamed_addr constant [3 x i8] c\"%f\00\"\n";
         text += header_text;
         text += "define i32 @main() nounwind{\n";
-        text += main_text;
+        text += m_text;
         text += "ret i32 0 }\n";
         return text;
     }

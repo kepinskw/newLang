@@ -720,6 +720,34 @@ class LLVMGenerator {
       main_text += buffer;
     }
 
+    static void declare_struct(String id, List<Value> fields) {
+        header_text += "%struct." + id + " = type {";
+        for (int i = 0; i < fields.size(); i++) {
+            if(fields.get(i).type == VarType.INT){
+                header_text += "i32";
+            }
+            if (i<fields.size()-1){
+                header_text += ", ";
+            }
+
+        }
+        header_text += "}\n";
+    }
+
+    static void allocate_struct(String ID){
+        main_text += "%" + reg + " = alloca i32 \n";
+        reg++;
+        main_text += "%" + reg + " = alloca %struct." + ID + "\n";
+        reg++;
+        main_text += "store i32 0, i32* %" + (reg - 2) + "\n";
+        // main_text += "%" + reg + " = bitcast %struct." + ID + "* %" + (reg - 1) + " to i8*\n";
+        // reg++;
+        // main_text += "call void @llvm.memset.p0i8.i64(i8* %" + (reg - 1) + ", i8 0, i64 sizeof(%struct." + ID + "), i1 false)\n";
+        // main_text += "%" + reg + " = bitcast %struct." + ID + "* %" + (reg - 2) + " to i8*\n";
+        // reg++;
+        // main_text += "call void @llvm.memcpy.p0i8.p0i8.i64(i8* %" + (reg - 1) + ", i8* getelementptr inbounds ([0 x i8], [0 x i8]* @.str, i32 0, i32 0), i64 sizeof(%struct." + ID + "), i1 false)\n";
+        // reg++;
+    }
 
     static String generate() {
         String text = "";

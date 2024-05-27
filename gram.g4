@@ -11,7 +11,10 @@ stat: ID LSP INT RSP '=' value    #assignArrayElem
     | (ID LFP INT RFP | ID) '=' array #assignArray
     | (ID LFP INT RFP LFP INT RFP | ID) '=' matrix  #assignMatrix
     | READ ID        #read
-    | func           #fun;
+    | func           #fun
+    | STRUCT ID '{' structVar* '}' #structDecl
+    | ID '=' STRUCT ID #structAssign
+    | ID '.' ID '=' INT #structAssignElem;
 
 printElem: ID   #print
     |   letter  #printLetter;
@@ -89,7 +92,15 @@ matrixRowInt: (INT (COMA INT)*);
 
 matrixRowDouble: (REAL (COMA REAL)*);
 
+structVar: type ID ';' #structVarDecl;
+type: 'int' #intType
+    | REAL #realType
+    | STRING #stringType
+    | BOOL #boolType
+    | ID #idType;
 
+
+STRUCT: 'struct';
 
 PRINT: 'print' ;
 READ: 'read' ;

@@ -1,3 +1,1 @@
-a{2}{3}=[1,2,7;3,4,9]
-b=a[][1]
-print b
+struct test { int a; int b; }

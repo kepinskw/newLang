@@ -2,19 +2,21 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-enum VarType {INT, REAL, FLOAT, STRING, ARRAY_i32, ARRAY_i32_ELEM, MATRIX_DOUBLE, MATRIX_I32, ARRAY_DOUBLE, BOOL, UNKNOWN}
+enum VarType {INT, REAL, FLOAT, STRING, ARRAY_i32, ARRAY_i32_ELEM, MATRIX_DOUBLE, MATRIX_I32, ARRAY_DOUBLE, BOOL, UNKNOWN, STRUCT}
 
 class Value {
     public String name;
     public VarType type;
     public int length;
     public int length1;
+    public String structName;
 
     public Value(String name, VarType type, int length, int length1) {
         this.name = name;
         this.type = type;
         this.length = length;
         this.length1 = length1;
+        this.structName = "";
     }
 
     public Value(String name, VarType type, int length) {
@@ -22,6 +24,15 @@ class Value {
         this.type = type;
         this.length = length;
         this.length1 = 0;
+        this.structName = "";
+    }
+    
+    public Value(String name, VarType type, String structName){
+        this.name = name;
+        this.type = type;
+        this.length = 0;
+        this.length1 = 0;
+        this.structName = structName;
     }
 }
 
@@ -33,6 +44,7 @@ public class LLVMActions extends gramBaseListener {
     HashSet<String> localnames = new HashSet<String>();
     Stack<Value> stack = new Stack<Value>();
     Boolean global;
+    HashMap<String, List<Value>> structs = new HashMap<String, List<Value>>();
 
     static int BUFFER_SIZE = 16;
 
@@ -788,7 +800,63 @@ public class LLVMActions extends gramBaseListener {
 
     }
 
+    @Override
+    public void exitStructDecl(gramParser.StructDeclContext ctx) {
+        String ID = ctx.ID().getText();
+        System.err.println("ID: " + ID);
+        if (structs.containsKey(ID)) {
+            error(ctx.getStart().getLine(), "Struct " + ID + " already declared");
+        }
+        List<Value> v = new ArrayList<Value>();
+        System.err.println(ctx.getChildCount());
+        for (int i = 3; i < ctx.getChildCount()-1; i++) {
+            System.err.println(ctx.getChild(i).getText());
+            String tmp = ctx.getChild(i).getText();
+            String name_var = tmp.substring(3, tmp.length() - 1);
+            v.add(new Value(name_var, VarType.INT, 0));
+        }
+        structs.put(ID, v);
+        LLVMGenerator.declare_struct(ID, v);
+    }
+
+    @Override
+    public void exitStructAssign(gramParser.StructAssignContext ctx) {
+        String ID = ctx.ID(1).getText();
+        if (!structs.containsKey(ID)) {
+            error(ctx.getStart().getLine(), "Struct " + ID + " not declared");
+        }
+        LLVMGenerator.allocate_struct(ID);
+        stack.push(new Value("%" + (LLVMGenerator.reg - 1), VarType.STRUCT, 0));
+    }
+
+    @Override
+    public void exitStructAssignElem(gramParser.StructAssignElemContext ctx) {
+        String ID = ctx.ID(1).getText();
+        if (!structs.containsKey(ID)) {
+            error(ctx.getStart().getLine(), "Struct " + ID + " not declared");
+        }
+        List<Value> v = structs.get(ID);
+        String ID2 = ctx.ID(0).getText();
+        if (!variables.containsKey(ID2)) {
+            error(ctx.getStart().getLine(), "Variable " + ID2 + " not declared");
+        }
+        Value v2 = variables.get(ID2);
+        if (v2.type != VarType.INT) {
+            error(ctx.getStart().getLine(), "Variable " + ID2 + " is not an int");
+        }
+        String INT = ctx.INT().getText();
+        if (Integer.parseInt(INT) >= v.size()) {
+            error(ctx.getStart().getLine(), "Index out of bounds");
+        }
+        Value var = v.get(Integer.parseInt(INT));
+        if (var.type != VarType.INT) {
+            error(ctx.getStart().getLine(), "Variable " + var.name + " is not an int");
+        }
+        LLVMGenerator.assign_struct_elem(ID, Integer.parseInt(INT), v2.name);
+    }
+
     void error(int line, String msg) {
+        System.err.println("Error at line " + line + ": " + msg);
         System.exit(1);
     }
 

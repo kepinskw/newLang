@@ -9,3 +9,5 @@ endfun
 
 y = func
 print y
+
+print x
